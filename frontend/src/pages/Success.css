@@ -1,0 +1,138 @@
+.success-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 2rem;
+  }
+  
+  .success-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .success-icon {
+    font-size: 5rem;
+    color: #4BB543;
+    margin-bottom: 1.5rem;
+  }
+  
+  .success-card h2 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+  }
+  
+  .confirmation-message {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: left;
+  }
+  
+  .confirmation-message p {
+    margin: 0.5rem 0;
+  }
+  
+  .voting-instructions {
+    text-align: left;
+    margin: 2rem 0;
+  }
+  
+  .voting-instructions h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+  
+  .voting-instructions ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .voting-instructions li {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: flex-start;
+  }
+  
+  .instruction-step {
+    background: #1075bf;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+  
+  .login-options {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.5rem 0 0 2rem;
+  }
+  
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f1f8fe;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+  }
+  
+  .option-icon {
+    color: #1075bf;
+  }
+  
+  .option-or {
+    color: #6c757d;
+  }
+  
+  .next-steps {
+    background: #e8f5e9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    text-align: left;
+  }
+  
+  .next-steps h4 {
+    margin-top: 0;
+    color: #2c3e50;
+  }
+  
+  .back-home-btn {
+    background: #1075bf;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.3s;
+    margin-top: 1rem;
+  }
+  
+  .back-home-btn:hover {
+    background: #0d5d99;
+  }
