@@ -100,7 +100,7 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
   return (
     <div className="verification-container">
       <div className="illustration">
-        <img src="/imgs/voting-illustration.jpg" alt="Voting Illustration" />
+        <img src="./imgs/voting-illustration.jpg" alt="Voting Illustration" />
       </div>
 
       <div className="verification-form">

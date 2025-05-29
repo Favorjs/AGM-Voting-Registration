@@ -18,7 +18,7 @@ export default function Header() {
   return (
     <header className="header">
       <div className="logo-container">
-        <img src="/logo.png" alt="E-Voting Logo" className="logo" />
+        <img src="./logo.png" alt="E-Voting Logo" className="logo" />
         <h4>E-Voting Registration Portal</h4>
       </div>
       
