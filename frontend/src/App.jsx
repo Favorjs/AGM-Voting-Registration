@@ -19,7 +19,7 @@ function App() {
         
         <main className="main-content">
           <Routes>
-            <Route path="/e-voting-registration" element={
+            <Route path="/" element={
               currentView === 'check' ? (
                 <ShareholderCheck 
                   setCurrentView={setCurrentView}
