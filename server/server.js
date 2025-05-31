@@ -6,8 +6,8 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const twilio = require('twilio');
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+
 
 // Sequelize setup
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
@@ -17,7 +17,7 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
 
 const allowedOrigins = [
   'http://localhost:5173',                   // Vite local frontend
-  'https://agm-voting-registration.vercel.app/'      // Replace with your actual deployed Vercel URL
+  'https://agm-voting-registration.vercel.app'      // Replace with your actual deployed Vercel URL
 ];
 
 const corsOptions = {
@@ -37,6 +37,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(express.json());
 
 
 
@@ -219,7 +220,7 @@ app.post('/api/send-confirmation', async (req, res) => {
 
     await VerificationToken.create({ acno, token, email, phone_number, expires_at: expiresAt });
 
-    const confirmUrl = `https://e-voting-backeknd.railway.app/api/confirm/${token}`;
+    const confirmUrl = `https://e-voting-backeknd-production.up.railway.app/api/confirm/${token}`;
 
     await transporter.sendMail({
       from: 'E-Voting Portal <your@email.com>',
