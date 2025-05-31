@@ -4,51 +4,53 @@ const { Sequelize, DataTypes, Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-// const twilio = require('twilio');
+const twilio = require('twilio');
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-//Sequelize setup
+// Sequelize setup
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'mysql',
-  dialectOptions: {
-    ssl: { rejectUnauthorized: false }
-  }
+ 
 });
+
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://agm-voting-registration-oq7s.vercel.app'
+  'http://localhost:5173',                   // Vite local frontend
+  'https://agm-voting-registration.vercel.app/'      // Replace with your actual deployed Vercel URL
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-    // allow requests with no origin like mobile apps or curl
+    // allow requests with no origin (like curl, mobile apps)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'CORS policy does not allow access from this origin.';
-      return callback(new Error(msg), false);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`❌ Blocked by CORS: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     }
-    return callback(null, true);
   },
-  credentials: true
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
 
-// const sequelize = new Sequelize(
-//   process.env.DB_NAME || 'e-voting',
-//   process.env.DB_USER || 'root',
-//   process.env.DB_PASS || '',
-//   {
-//     host: process.env.DB_HOST || 'localhost',
-//     dialect: 'mysql',
-//     logging: false,
+app.use(cors(corsOptions));
 
-//     dialectOptions: {
-//     ssl: false // Disable SSL
-//   }
-//   },
-  
-//);
+
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  next();
+});
+
 // const twilioClient = twilio(
 //   process.env.TWILIO_ACCOUNT_SID,
 //   process.env.TWILIO_AUTH_TOKEN
@@ -104,10 +106,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  tls: {
-  minVersion: 'TLSv1.2'
-},
+  }
 });
 
 
@@ -220,7 +219,7 @@ app.post('/api/send-confirmation', async (req, res) => {
 
     await VerificationToken.create({ acno, token, email, phone_number, expires_at: expiresAt });
 
-    const confirmUrl = `http://localhost:3001/api/confirm/${token}`;
+    const confirmUrl = `https://e-voting-backeknd.railway.app/api/confirm/${token}`;
 
     await transporter.sendMail({
       from: 'E-Voting Portal <your@email.com>',
@@ -349,19 +348,19 @@ app.get('/api/registered-users', async (req, res) => {
       subject: '✅ Successfully Registered for Voting',
       html: `
         <h2>🎉 Hello ${shareholder.name},</h2>
-        <p>You have successfully registered for the upcoming e-voting session.</p>
+        <p>You have successfully registered for the upcoming e-voting session and zoom Meeting.</p>
         <p>✅ Your account is now active.</p>
         <h3>🗳️ Voting Instructions:</h3>
         <ul>
-          <li>Visit the <a href="http://yourdomain.com/e-voting">E-Voting Portal</a></li>
-          <li>Login using your registered email address: <strong>${shareholder.email}</strong></li> or <br> phone Number:<strong>${shareholder.phone_number}</strong>
-          <li>Follow the prompts to cast your vote</li>
+          <li>You will be recieve a zoom link on you mail to join the Annual General meeting </a></li>
+          <li>Login to zoom using only your registered email address: <strong>${shareholder.email}</strong>
+   
         </ul>
         <p>Thank you for participating!</p>
       `
     });
 
-    res.redirect('http://localhost:5173/registration-success');
+    res.redirect('https://agm-voting-registration.vercel.app/registration-success');
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -369,10 +368,10 @@ app.get('/api/registered-users', async (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 sequelize.sync().then(() => {
   console.log('✅ Database synced');
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on ${PORT}`);
   });
 });

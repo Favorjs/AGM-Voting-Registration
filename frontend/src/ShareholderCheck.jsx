@@ -26,7 +26,7 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
     setSelectedShareholder(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/check-shareholder', {
+      const response = await fetch('https://e-voting-backeknd.railway.app/api/check-shareholder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ searchTerm }),
@@ -66,7 +66,7 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
         phone_number: selectedShareholder.phone_number,
         chn: selectedShareholder.chn,
       });
-      const response = await fetch('http://localhost:3001/api/send-confirmation', {
+      const response = await fetch('https://e-voting-backeknd.railway.app/api/send-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

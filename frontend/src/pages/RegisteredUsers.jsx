@@ -34,7 +34,7 @@ const RegisteredUsers = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:3001/api/registered-users?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`
+        `https://e-voting-backeknd.railway.app/api/registered-users?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`
       );
  
       if (!response.ok) {
