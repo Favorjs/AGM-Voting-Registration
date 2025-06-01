@@ -20,6 +20,7 @@ const allowedOrigins = [
   'https://agm-voting-registration.vercel.app',
   'https://agm-registration.apel.com.ng' // Add your new domain here
 ];
+
 const corsOptions = {
   origin: function (origin, callback) {
     // allow requests with no origin (like curl, mobile apps)
@@ -36,6 +37,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
+app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable preflight for all routes
 app.use(express.json());
 
