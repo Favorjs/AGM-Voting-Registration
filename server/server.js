@@ -16,10 +16,10 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
 });
 
 const allowedOrigins = [
-  'http://localhost:5173',                   // Vite local frontend
-  'https://agm-registration.apel.com.ng/'      // Replace with your actual deployed Vercel URL
+  'http://localhost:5173',
+  'https://agm-voting-registration.vercel.app',
+  'https://agm-registration.apel.com.ng' // Add your new domain here
 ];
-
 const corsOptions = {
   origin: function (origin, callback) {
     // allow requests with no origin (like curl, mobile apps)
