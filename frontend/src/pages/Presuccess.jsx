@@ -19,10 +19,10 @@ const PreRegistrationSuccess = () => {
 
         <div className="next-steps">
           <h4>What's Next?</h4>
-          <p>After clicking the confirmation link in your email, you'll be fully registered for the e-voting system.</p>
+          <p>After clicking the confirmation link in your email, you'll be fully registered for the Zoom Meeting.</p>
         </div>
 
-        <Link to="/" className="back-home-btn">
+        <Link to="https://agm-registration.apel.com.ng/" className="back-home-btn">
           Back to Home
         </Link>
       </div>
