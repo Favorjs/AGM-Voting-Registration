@@ -17,7 +17,7 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
 
 const allowedOrigins = [
   'http://localhost:5173',                   // Vite local frontend
-  'https://agm-voting-registration.vercel.app'      // Replace with your actual deployed Vercel URL
+  'https://agm-registration.apel.com.ng/'      // Replace with your actual deployed Vercel URL
 ];
 
 const corsOptions = {
@@ -223,7 +223,7 @@ app.post('/api/send-confirmation', async (req, res) => {
     const confirmUrl = `https://e-voting-backeknd-production.up.railway.app/api/confirm/${token}`;
 
     await transporter.sendMail({
-      from: 'E-Voting Portal <your@email.com>',
+      from: 'E-Registration <your@email.com>',
       to: shareholder.email,
       subject: 'Confirm Your Registration',
       html: `
@@ -346,10 +346,10 @@ app.get('/api/registered-users', async (req, res) => {
     await transporter.sendMail({
       from: '"E-Voting Portal" <your@email.com>',
       to: shareholder.email,
-      subject: '✅ Successfully Registered for Voting',
+      subject: '✅ Successfully Registered for SAHCO AGM',
       html: `
         <h2>🎉 Hello ${shareholder.name},</h2>
-        <p>You have successfully registered for the upcoming e-voting session and zoom Meeting.</p>
+        <p>You have successfully registered for the upcoming SAHcO Annual General Meeting.</p>
         <p>✅ Your account is now active.</p>
         <h3>🗳️ Voting Instructions:</h3>
         <ul>
@@ -361,7 +361,7 @@ app.get('/api/registered-users', async (req, res) => {
       `
     });
 
-    res.redirect('https://agm-voting-registration.vercel.app/registration-success');
+    res.redirect('https://agm-registration.apel.com.ng//registration-success');
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
