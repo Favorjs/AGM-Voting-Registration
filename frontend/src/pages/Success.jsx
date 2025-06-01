@@ -73,7 +73,7 @@ const Success = ({ shareholderData, onBackToHome }) => {
           onClick={() => onBackToHome()}
           className="back-home-btn"
         >
-     <Link to="https://agm-registration.apel.com.ng/" className="back-home-btn">   Back to Home </Link>     <FaArrowRight />
+          Back to Home <FaArrowRight />
         </button>
       </div>
     </div>
