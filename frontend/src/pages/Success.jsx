@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { FaCheckCircle, FaEnvelope, FaPhone, FaArrowRight, FaVoteYea } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaCheckCircle, FaEnvelope, FaPhone, FaArrowRight, FaVoteYea, FaThumbsUp, FaThumbsDown } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import './Success.css';
 
@@ -7,71 +8,120 @@ const Success = ({ shareholderData, onBackToHome }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Scroll to top on component mount
     window.scrollTo(0, 0);
   }, []);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        when: "beforeChildren"
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  };
+
   return (
-    <div className="success-container">
-      <div className="success-card">
-        <div className="success-icon">
+    <motion.div 
+      className="success-container"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <motion.div 
+        className="success-card motion-card"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 200 }}
+      >
+        <motion.div className="success-icon" variants={itemVariants}>
           <FaCheckCircle />
-        </div>
+        </motion.div>
         
-        <h2>Registration Successful! 🎉</h2>
+        <motion.h2 variants={itemVariants}>Registration Successful! 🎉</motion.h2>
         
-        <div className="confirmation-message">
+        <motion.div className="confirmation-message" variants={itemVariants}>
           <p>Thank you for registering for the SAHCO AGM.</p>
           <p>A Success email has been sent to <strong>{shareholderData?.email}</strong>.</p>
-        </div>
+        </motion.div>
 
-        <div className="voting-instructions">
+     <motion.div className="voting-instructions">
           <h3><FaVoteYea /> Voting Instructions</h3>
           <ol>
             <li>
               <span className="instruction-step">1</span>
-              <p>When voting begins, visit the e-voting portal</p>
+              <p>Before the meeting, ensure you have the latest version of Zoom installed</p>
             </li>
             <li>
               <span className="instruction-step">2</span>
-              <p>Login using either:</p>
-              <div className="login-options">
-                <div className="option">
-                  <FaEnvelope className="option-icon" />
-                  <span>Your registered email</span>
-                </div>
-                <p className="option-or">OR</p>
-                <div className="option">
-                  <FaPhone className="option-icon" />
-                  <span>Your registered phone number</span>
-                </div>
-              </div>
+              <p>Join the scheduled Zoom meeting using the link provided in your invitation</p>
+         
             </li>
             <li>
               <span className="instruction-step">3</span>
-              <p>Follow the on-screen instructions to cast your vote</p>
+              <p>During the voting session, the host will launch the polling feature</p>
             </li>
             <li>
               <span className="instruction-step">4</span>
-              <p>Review and submit your ballot</p>
+              <p>When prompted:</p>
+              
+          <div className="voting-options">
+  <div className="option">
+    <FaThumbsUp className="option-icon" />
+    <span>Vote FOR the resolution</span>
+  </div>
+  <p className="option-or">OR</p>
+  <div className="option">
+    <FaThumbsDown className="option-icon" />
+    <span>Vote AGAINST the resolution</span>
+  </div>
+</div>
+  </li>
+  <li>
+    <span className="instruction-step">5</span>
+    <p>Select your vote from the options presented</p>
+  </li>
+  <li>
+    <span className="instruction-step">6</span>
+    <p>Submit your vote before the time limit expires</p>
             </li>
           </ol>
-        </div>
+     </motion.div>
 
-        <div className="next-steps">
+         <motion.div className="next-steps">
           <h4>What's Next?</h4>
-          <p>You'll receive an email befor and when  when voting begins with a direct link to the voting portal.</p>
-        </div>
-
-        <button 
+          <p>You'll receive a Zoom invitation with the meeting details and voting schedule. Results will be shared in real time as you vote. </p>
+      </motion.div>
+ <motion.button 
           onClick={() => onBackToHome()}
           className="back-home-btn"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          variants={itemVariants}
         >
           Back to Home <FaArrowRight />
-        </button>
-      </div>
-    </div>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 };
 
 export default Success;
+
+
+
+
+

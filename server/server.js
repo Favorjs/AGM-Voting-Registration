@@ -16,9 +16,9 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
 });
 
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://agm-voting-registration.vercel.app',
-  'https://agm-registration.apel.com.ng' // Add your new domain here
+  process.env.LOCAL_FRONTEND,
+  process.env.LIVE_FRONTEND1,
+  process.env.LIVE_FRONTEND2 // Add your new domain here
 ];
 
 const corsOptions = {
