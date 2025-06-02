@@ -7,6 +7,7 @@ import {
   FaEnvelope,
   FaPhone,
   FaChevronRight,
+  FaEnvelopeOpen,
 } from 'react-icons/fa';
 
 const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {

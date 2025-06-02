@@ -19,7 +19,7 @@ const allowedOrigins = [
   process.env.LOCAL_FRONTEND,
   process.env.LIVE_FRONTEND1,
   process.env.LIVE_FRONTEND2 // Add your new domain here
-];
+].filter(Boolean);
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -281,6 +281,32 @@ app.get('/api/confirm/:token', async (req, res) => {
 
     // Add this endpoint to your existing server code
 
+
+    // Send follow-up email
+    await transporter.sendMail({
+      from: '"E-Voting Portal" <your@email.com>',
+      to: shareholder.email,
+      subject: '✅ Successfully Registered for SAHCO AGM',
+      html: `
+        <h2>🎉 Hello ${shareholder.name},</h2>
+        <p>You have successfully registered for the upcoming SAHcO Annual General Meeting.</p>
+        <p>✅ Your account is now active.</p>
+        <h3>🗳️ Voting Instructions:</h3>
+        <ul>
+          <li>You will be recieve a zoom link on you mail to join the Annual General meeting </a></li>
+          <li>Login to zoom using only your registered email address: <strong>${shareholder.email}</strong>
+   
+        </ul>
+        <p>Thank you for participating!</p>
+      `
+    });
+
+    res.redirect('https://agm-registration.apel.com.ng//registration-success');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 // Get all registered users with pagination
 app.get('/api/registered-users', async (req, res) => {
   try {
@@ -344,32 +370,6 @@ app.get('/api/registered-users', async (req, res) => {
     });
   }
 });
-    // Send follow-up email
-    await transporter.sendMail({
-      from: '"E-Voting Portal" <your@email.com>',
-      to: shareholder.email,
-      subject: '✅ Successfully Registered for SAHCO AGM',
-      html: `
-        <h2>🎉 Hello ${shareholder.name},</h2>
-        <p>You have successfully registered for the upcoming SAHcO Annual General Meeting.</p>
-        <p>✅ Your account is now active.</p>
-        <h3>🗳️ Voting Instructions:</h3>
-        <ul>
-          <li>You will be recieve a zoom link on you mail to join the Annual General meeting </a></li>
-          <li>Login to zoom using only your registered email address: <strong>${shareholder.email}</strong>
-   
-        </ul>
-        <p>Thank you for participating!</p>
-      `
-    });
-
-    res.redirect('https://agm-registration.apel.com.ng//registration-success');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-});
-
 // Start server
 const PORT = process.env.PORT;
 sequelize.sync().then(() => {

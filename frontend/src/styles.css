@@ -218,21 +218,25 @@ button:disabled {
 /* Shareholder Details */
 .shareholder-details {
   background-color: var(--light-color);
-  padding: 1.5rem;
+  padding: 1.7rem;
   border-radius: var(--border-radius);
-  margin: 1.5rem 0;
+  margin: 1rem 0;
+
+ 
 }
 
 .shareholder-details p {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.55rem;
   margin-bottom: 0.75rem;
+  font-size: 15px;
 }
 
 .shareholder-details strong {
   min-width: 100px;
   display: inline-block;
+
 }
 
 /* Action Buttons */
@@ -310,6 +314,14 @@ tr:hover {
   .nav.mobile-menu-open {
     right: 0;
   }
+
+  .shareholder-details p {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+  font-size: 12px;
+}
   
   .verification-container {
     padding: 1rem;
