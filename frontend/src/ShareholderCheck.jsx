@@ -145,7 +145,7 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
               variants={containerVariants}
             >
               <motion.form onSubmit={handleSearch} variants={itemVariants}>
-                <motion.h2 variants={itemVariants}>SAHCO AGM</motion.h2>
+                <motion.h2 variants={itemVariants}>SAHCO AGM REGISTRATION</motion.h2>
                 <motion.p className="form-description" variants={itemVariants}>
                   Search by name, CHN or account number
                 </motion.p>
