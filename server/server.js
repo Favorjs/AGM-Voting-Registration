@@ -217,6 +217,16 @@ app.post('/api/send-confirmation', async (req, res) => {
     const shareholder = await Shareholder.findOne({ where: { acno } });
     if (!shareholder) return res.status(404).json({ message: 'Shareholder not found' });
 
+
+
+if (email && email !== shareholder.email) {
+      await Shareholder.update(
+        { email },
+        { where: { acno } }
+      );
+      shareholder.email = email; // Update local instance
+    }
+
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -293,7 +303,7 @@ app.get('/api/confirm/:token', async (req, res) => {
         <p>✅ Your account is now active.</p>
         <h3>🗳️ Voting Instructions:</h3>
         <ul>
-          <li>You will be recieve a zoom link on you mail to join the Annual General meeting </a></li>
+          <li>You will recieve a zoom link on you mail to join the Annual General meeting </a></li>
           <li>Login to zoom using only your registered email address: <strong>${shareholder.email}</strong>
    
         </ul>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, color } from 'framer-motion';
 import {
   FaSearch,
   FaUser,
@@ -16,7 +16,7 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
   const [error, setError] = useState('');
   const [results, setResults] = useState(null);
   const [selectedShareholder, setSelectedShareholder] = useState(null);
-
+  const [editedEmail, setEditedEmail] = useState('');
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
@@ -25,6 +25,7 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
     setLoading(true);
     setResults(null);
     setSelectedShareholder(null);
+    setEditedEmail('');
 
     try {
       const response = await fetch('https://e-voting-backeknd-production.up.railway.app/api/check-shareholder', {
@@ -37,10 +38,12 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
 
       if (data.status === 'account_match') {
         setSelectedShareholder(data.shareholder);
+          setEditedEmail(data.shareholder.email || '');
       } else if (data.status === 'name_matches') {
         setResults(data.shareholders);
       } else if (data.status === 'chn_match') {
         setSelectedShareholder(data.shareholder);
+        setEditedEmail(data.shareholder.email || ''); // Initialize edited email
       } else {
         setError(data.message || 'No matching shareholders found');
       }
@@ -56,26 +59,40 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
 
     setLoading(true);
     try {
-      console.log('Sending to backend:', {
-        acno: selectedShareholder.acno,
-        email: selectedShareholder.email,
-        phone_number: selectedShareholder.phone_number,
-        chn: selectedShareholder.chn,
+
+
+  // Create updated shareholder data with the edited email
+      const updatedShareholder = {
+        ...selectedShareholder,
+        email: editedEmail || selectedShareholder.email
+      };
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (editedEmail && !emailRegex.test(editedEmail)) {
+  setError('Please enter a valid email address');
+  return;
+}
+
+       console.log('Sending to backend:', {
+        acno: updatedShareholder.acno,
+        email: updatedShareholder.email,
+        phone_number: updatedShareholder.phone_number,
+        chn: updatedShareholder.chn,
       });
       const response = await fetch('https://e-voting-backeknd-production.up.railway.app/api/send-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          acno: selectedShareholder.acno,
-          email: selectedShareholder.email,
-          phone_number: selectedShareholder.phone_number,
-          chn: selectedShareholder.chn,
+          acno: updatedShareholder.acno,
+          email: updatedShareholder.email,
+          phone_number: updatedShareholder.phone_number,
+          chn: updatedShareholder.chn,
         }),
-      });
+      })
 
       const data = await response.json();
       if (response.ok) {
-        setShareholderData(selectedShareholder);
+        setShareholderData(updatedShareholder);
         setCurrentView('Presuccess');
       } else {
         setError(data.error || 'Registration failed or This shareholder is already registered');
@@ -206,13 +223,29 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
               variants={scaleUp}
             >
               <motion.h2 variants={itemVariants}>Verify Your Details</motion.h2>
+                <motion.p variants={itemVariants} style={{ color: 'red' }}>Please note that your email address is the one we have on record.</motion.p>
+
               <motion.div 
                 className="shareholder-details"
                 variants={containerVariants}
               >
                 <motion.p variants={itemVariants}><FaUser /> <strong>Name:</strong> {selectedShareholder.name}</motion.p>
                 <motion.p variants={itemVariants}><FaIdCard /> <strong>Account No:</strong> {selectedShareholder.acno}</motion.p>
-                <motion.p variants={itemVariants}><FaEnvelope /> <strong>Email:</strong> {selectedShareholder.email}</motion.p>
+                <motion.div variants={itemVariants} className="email-input-container">
+              <FaEnvelope /> <strong>Email:</strong> 
+              {selectedShareholder.email ? (
+                <span>{selectedShareholder.email}</span>
+              ) : (
+                <input
+                  type="email"
+                  value={editedEmail}
+                  onChange={(e) => setEditedEmail(e.target.value)}
+                  placeholder="We do not have your email, Enter email "
+                  required
+                  className="email-input"
+                />
+              )}
+            </motion.div>
                 <motion.p variants={itemVariants}><FaPhone /> <strong>Phone:</strong> {selectedShareholder.phone_number}</motion.p>
               </motion.div>
 
