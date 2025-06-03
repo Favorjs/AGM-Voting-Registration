@@ -166,7 +166,9 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
                 <motion.p className="form-description" variants={itemVariants}>
                   Search by name, CHN or account number
                 </motion.p>
-
+ <motion.p className="form-description" variants={itemVariants}  style={{ color: 'red' }} >
+                  Kindly note that you need to register and have a valid email to be able to attend the AGM
+                </motion.p>
                 <motion.div className="form-group" variants={itemVariants}>
                   <div className="input-with-icon">
                     <FaSearch className="input-icon" />
@@ -223,7 +225,9 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
               variants={scaleUp}
             >
               <motion.h2 variants={itemVariants}>Verify Your Details</motion.h2>
-                <motion.p variants={itemVariants} style={{ color: 'red' }}>Please note that your email address is the one we have on record.</motion.p>
+                <motion.p variants={itemVariants} style={{ color: 'red' }}>Please note that your email address displayed is exactly what we have on our record.</motion.p> 
+             <motion.p variants={itemVariants} style={{ color: 'red' }}>  You can fill in your email address if you do not have one on our record
+                </motion.p>
 
               <motion.div 
                 className="shareholder-details"
