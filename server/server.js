@@ -162,13 +162,47 @@ app.post('/api/check-shareholder', async (req, res) => {
     }
 
     // For names, do partial search (randomized)
-    const shareholders = await Shareholder.findAll({
-      where: {
-        name: { [Op.like]: `%${searchTerm}%` }
-      },
-      order: sequelize.random(), // Randomize name results
-      limit: 10
-    });
+   const shareholders = await Shareholder.findAll({
+  where: {
+    [Op.or]: [
+      // Basic search
+      { name: { [Op.like]: `%${searchTerm}%` } },
+      
+      // Split search term into words and search for each component
+      ...searchTerm.split(/\s+/).filter(Boolean).map(word => ({
+        name: { [Op.like]: `%${word}%` }
+      })),
+      
+      // Soundex for phonetic matching (handles some misspellings)
+      sequelize.where(
+        sequelize.fn('SOUNDEX', sequelize.col('name')),
+        'LIKE',
+        `${sequelize.fn('SOUNDEX', searchTerm)}%`
+      ),
+      
+      // Levenshtein distance for typo tolerance (if extension is available)
+      ...(sequelize.dialect === 'mysql' ? [{
+        name: sequelize.where(
+          sequelize.fn('LEVENSHTEIN', 
+            sequelize.fn('LOWER', sequelize.col('name')),
+            sequelize.fn('LOWER', searchTerm)
+          ),
+          { [Op.lte]: 3 } // Allow small differences
+        )
+      }] : [])
+    ]
+  },
+  order: [
+    // Prioritize exact matches first
+    sequelize.literal(`CASE WHEN name LIKE '${searchTerm}' THEN 0 
+                        WHEN name LIKE '${searchTerm}%' THEN 1 
+                        WHEN name LIKE '%${searchTerm}%' THEN 2 
+                        ELSE 3 END`),
+    // Then sort by random for equally good matches
+    sequelize.random()
+  ],
+  limit: 10
+});
 
     if (shareholders.length > 0) {
       return res.json({

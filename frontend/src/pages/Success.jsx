@@ -61,21 +61,21 @@ const Success = ({ shareholderData, onBackToHome }) => {
      <motion.div className="voting-instructions">
           <h3><FaVoteYea /> Voting Instructions</h3>
           <ol>
-            <li>
-              <span className="instruction-step">1</span>
+            <li >
+            
               <p>Before the meeting, ensure you have the latest version of Zoom installed</p>
             </li>
             <li>
-              <span className="instruction-step">2</span>
+           
               <p>Join the scheduled Zoom meeting using the link provided in your invitation</p>
          
             </li>
             <li>
-              <span className="instruction-step">3</span>
+             
               <p>During the voting session, the host will launch the polling feature</p>
             </li>
             <li>
-              <span className="instruction-step">4</span>
+           
               <p>When prompted:</p>
               
           <div className="voting-options">
@@ -91,11 +91,11 @@ const Success = ({ shareholderData, onBackToHome }) => {
 </div>
   </li>
   <li>
-    <span className="instruction-step">5</span>
+ 
     <p>Select your vote from the options presented</p>
   </li>
   <li>
-    <span className="instruction-step">6</span>
+   
     <p>Submit your vote before the time limit expires</p>
             </li>
           </ol>
