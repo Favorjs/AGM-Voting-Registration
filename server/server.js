@@ -6,6 +6,11 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 const twilio = require('twilio');
 const app = express();
+const TWILIO_ACCOUNT_SID= process.env.TWILIO_ACCOUNT_SID
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_ACCOUNT_TOKEN
+const TWILIO_PHONE_NUMBER =process.env.TWILIO_PHONE_NUMBER
+
+const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 
 
@@ -54,10 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// const twilioClient = twilio(
-//   process.env.TWILIO_ACCOUNT_SID,
-//   process.env.TWILIO_AUTH_TOKEN
-// );
+ 
 //Shareholder Model
 const Shareholder = sequelize.define('shareholders', {
   acno: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
@@ -233,7 +235,6 @@ app.post('/api/send-confirmation', async (req, res) => {
   const { acno, email, phone_number } = req.body;
 
 
-  
   try {
 
     const alreadyRegistered = await RegisteredUser.findOne({
@@ -283,9 +284,21 @@ if (email && email !== shareholder.email) {
       `
     });
 
-    
+        // Send SMS if phone number exists
+    if (phone_number) {
+      try {
+        await twilioClient.messages.create({
+          body: `Hello ${shareholder.name}, confirm your SAHCO AGM registration: ${confirmUrl}`,
+          from: TWILIO_PHONE_NUMBER,
+          to: phone_number
+        });
+      } catch (smsError) {
+        console.error('Failed to send SMS:', smsError);
+        // Don't fail the whole request if SMS fails
+      }
+    }
 
-    res.json({ message: '✅ Confirmation sent to email.' });
+    res.json({ message: '✅ Confirmation sent to email and phone' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to send confirmation.' });
@@ -344,6 +357,20 @@ app.get('/api/confirm/:token', async (req, res) => {
         <p>Thank you for participating!</p>
       `
     });
+
+
+      // Send success SMS if phone number exists
+    if (shareholder.phone_number) {
+      try {
+        await twilioClient.messages.create({
+          body: `Hello ${shareholder.name}, your SAHCO AGM registration is successful. You will receive Zoom details via email.`,
+          from: TWILIO_PHONE_NUMBER,
+          to: shareholder.phone_number
+        });
+      } catch (smsError) {
+        console.error('Failed to send success SMS:', smsError);
+      }
+    }
 
     res.redirect('https://agm-registration.apel.com.ng//registration-success');
   } catch (err) {
