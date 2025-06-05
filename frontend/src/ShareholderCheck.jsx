@@ -164,7 +164,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
               <motion.form onSubmit={handleSearch} variants={itemVariants}>
                 <motion.h2 variants={itemVariants}>SAHCO AGM REGISTRATION</motion.h2>
                 <motion.p className="form-description" variants={itemVariants}>
-                  Search by name, CHN or account number
+                  Search by name, CHN or Registrars account number
                 </motion.p>
  <motion.p className="form-description" variants={itemVariants}  style={{ color: 'red' }} >
                   Kindly note that you need to register and have a valid email to be able to attend the AGM
@@ -233,10 +233,13 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
                 className="shareholder-details"
                 variants={containerVariants}
               >
-                <motion.p variants={itemVariants}><FaUser /> <strong>Name:</strong> {selectedShareholder.name}</motion.p>
-                <motion.p variants={itemVariants}><FaIdCard /> <strong>Account No:</strong> {selectedShareholder.acno}</motion.p>
-                <motion.div variants={itemVariants} className="email-input-container">
-              <FaEnvelope /> <strong>Email:</strong> 
+                <motion.div variants={itemVariants}><FaUser /> <b>Name:</b>     {selectedShareholder.name}</motion.div>
+                <br></br>
+                <motion.div variants={itemVariants}><FaIdCard /><b> Account No:     </b>{selectedShareholder.acno}</motion.div>
+
+                <br></br>
+                <motion.div variants={itemVariants} className="email-input-container"><FaEnvelope />
+            <b> Email:</b>     
               {selectedShareholder.email ? (
                 <span>{selectedShareholder.email}</span>
               ) : (
@@ -250,7 +253,8 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
                 />
               )}
             </motion.div>
-                <motion.p variants={itemVariants}><FaPhone /> <strong>Phone:</strong> {selectedShareholder.phone_number}</motion.p>
+            <br></br>
+                <motion.div variants={itemVariants}><FaPhone /> <b>Phone:</b>     {selectedShareholder.phone_number}</motion.div>
               </motion.div>
 
               <motion.div 
