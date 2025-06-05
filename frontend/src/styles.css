@@ -46,7 +46,7 @@ body {
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 9rem;
 }
 
 .logo {
@@ -117,12 +117,12 @@ body {
 }
 
 .verification-form {
-  background: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
+  background: var(--light-color);
+ 
+ 
   padding: 2rem;
   margin: 0 auto;
-  max-width: 800px;
+  min-width: 540px;
 }
 
 /* Form Styles */
@@ -217,10 +217,13 @@ button:disabled {
 
 /* Shareholder Details */
 .shareholder-details {
-  background-color: var(--light-color);
+  background-color: var(--light-color); 
   padding: 1.7rem;
-  border-radius: var(--border-radius);
+
+
   margin: 1rem 0;
+  min-width: 100%;
+
 
  
 }

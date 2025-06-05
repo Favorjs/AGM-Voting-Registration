@@ -14,6 +14,27 @@ const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 
 
+// Add this phone number formatter function
+function formatNigerianPhone(phone) {
+  // Remove all non-digit characters
+  let cleaned = phone.replace(/\D/g, '');
+
+  // Convert local numbers (starts with 0)
+  if (cleaned.startsWith('0')) {
+    return `+234${cleaned.substring(1)}`;
+  }
+
+  // Convert already national numbers (without +234)
+  if (cleaned.startsWith('234') && cleaned.length === 13) {
+    return `+${cleaned}`;
+  }
+
+  // Return as-is if already international format
+  return phone;
+}
+
+
+
 // Sequelize setup
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'mysql',
@@ -234,43 +255,72 @@ app.post('/api/check-shareholder', async (req, res) => {
 app.post('/api/send-confirmation', async (req, res) => {
   const { acno, email, phone_number } = req.body;
 
+  // Phone number formatting and validation functions
+  const formatNigerianPhone = (phone) => {
+    if (!phone) return null;
+    try {
+      const phoneString = String(phone).trim();
+      let cleaned = phoneString.replace(/\D/g, '');
+      
+      if (cleaned.startsWith('0')) {
+        return `+234${cleaned.substring(1)}`;
+      }
+      if (cleaned.startsWith('234') && cleaned.length === 13) {
+        return `+${cleaned}`;
+      }
+      return phoneString;
+    } catch (error) {
+      console.error('Phone formatting error:', error);
+      return null;
+    }
+  };
+
+  const isValidNigerianPhone = (phone) => {
+    return phone && /^\+234[789]\d{9}$/.test(String(phone).trim());
+  };
 
   try {
-
-    const alreadyRegistered = await RegisteredUser.findOne({
-      where: 
-  
-          { acno }
-        
-      
-    });
-
+    // Check if already registered
+    const alreadyRegistered = await RegisteredUser.findOne({ where: { acno } });
     if (alreadyRegistered) {
-      return res.status(400).json({ message: '❌ This shareholder is already registered with the same ACNO, Email, Phone Number or CHN.' });
+      return res.status(400).json({ 
+        message: '❌ This shareholder is already registered',
+        details: { acno }
+      });
     }
 
+    // Find shareholder
     const shareholder = await Shareholder.findOne({ where: { acno } });
-    if (!shareholder) return res.status(404).json({ message: 'Shareholder not found' });
-
-
-
-if (email && email !== shareholder.email) {
-      await Shareholder.update(
-        { email },
-        { where: { acno } }
-      );
-      shareholder.email = email; // Update local instance
+    if (!shareholder) {
+      return res.status(404).json({ 
+        message: 'Shareholder not found',
+        details: { acno }
+      });
     }
 
-    const token = uuidv4();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    // Update email if provided and different
+    if (email && email !== shareholder.email) {
+      await Shareholder.update({ email }, { where: { acno } });
+      shareholder.email = email;
+    }
 
-    await VerificationToken.create({ acno, token, email, phone_number, expires_at: expiresAt });
+    // Generate verification token
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
+
+    await VerificationToken.create({ 
+      acno, 
+      token, 
+      email: shareholder.email, 
+      phone_number: shareholder.phone_number, 
+      expires_at: expiresAt 
+    });
 
     const confirmUrl = `https://e-voting-backeknd-production.up.railway.app/api/confirm/${token}`;
 
+    // Send confirmation email
     await transporter.sendMail({
-      from: 'E-Registration <your@email.com>',
+      from: 'E-Registration <noreply@agm-registration.apel.com.ng>',
       to: shareholder.email,
       subject: 'Confirm Your Registration',
       html: `
@@ -280,28 +330,56 @@ if (email && email !== shareholder.email) {
         <a href="${confirmUrl}" style="background-color:#1075bf;padding:12px 20px;color:#fff;text-decoration:none;border-radius:5px;">
           ✅ Confirm Registration
         </a>
-        <p>If you didn’t request this, just ignore this email.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+        <p><small>Token expires at: ${expiresAt.toLocaleString()}</small></p>
       `
     });
 
-        // Send SMS if phone number exists
-    if (phone_number) {
+    // Send SMS if phone number exists
+    if (shareholder.phone_number) {
       try {
-        await twilioClient.messages.create({
-          body: `Hello ${shareholder.name}, confirm your SAHCO AGM registration: ${confirmUrl}`,
-          from: TWILIO_PHONE_NUMBER,
-          to: phone_number
-        });
+        const formattedPhone = formatNigerianPhone(shareholder.phone_number);
+        
+        if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
+          await twilioClient.messages.create({
+            body: `Hello ${shareholder.name}, confirm SAHCO AGM registration: ${confirmUrl}`,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: formattedPhone
+          });
+          console.log(`SMS sent to ${formattedPhone}`);
+        } else {
+          console.warn('Invalid phone number format:', shareholder.phone_number);
+        }
       } catch (smsError) {
-        console.error('Failed to send SMS:', smsError);
-        // Don't fail the whole request if SMS fails
+        console.error('SMS sending failed:', {
+          error: smsError.message,
+          phone: shareholder.phone_number,
+          timestamp: new Date().toISOString()
+        });
       }
     }
 
-    res.json({ message: '✅ Confirmation sent to email and phone' });
+    res.json({ 
+      success: true,
+      message: '✅ Confirmation sent to your email',
+      details: {
+        email: shareholder.email,
+        phone_number: shareholder.phone_number ? 'SMS sent' : 'No phone number'
+      }
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to send confirmation.' });
+    console.error('Send confirmation error:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      requestBody: req.body
+    });
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to send confirmation',
+      details: error.message 
+    });
   }
 });
 
@@ -309,20 +387,52 @@ if (email && email !== shareholder.email) {
 app.get('/api/confirm/:token', async (req, res) => {
   const { token } = req.params;
 
+  // Reusable phone functions
+  const formatNigerianPhone = (phone) => {
+    if (!phone) return null;
+    try {
+      const phoneString = String(phone).trim();
+      let cleaned = phoneString.replace(/\D/g, '');
+      
+      if (cleaned.startsWith('0')) {
+        return `+234${cleaned.substring(1)}`;
+      }
+      if (cleaned.startsWith('234') && cleaned.length === 13) {
+        return `+${cleaned}`;
+      }
+      return phoneString;
+    } catch (error) {
+      console.error('Phone formatting error:', error);
+      return null;
+    }
+  };
+
+  const isValidNigerianPhone = (phone) => {
+    return phone && /^\+234[789]\d{9}$/.test(String(phone).trim());
+  };
+
   try {
+    // Verify token
     const pending = await VerificationToken.findOne({ where: { token } });
-
     if (!pending || new Date(pending.expires_at) < new Date()) {
-      return res.status(400).send('❌ Invalid or expired token.');
+      return res.status(400).send(`
+        <h1>❌ Invalid or Expired Token</h1>
+        <p>The confirmation link has expired or is invalid.</p>
+        <p>Please request a new confirmation email.</p>
+      `);
     }
 
-    // Fetch full shareholder details
+    // Get shareholder data
     const shareholder = await Shareholder.findOne({ where: { acno: pending.acno } });
-
     if (!shareholder) {
-      return res.status(404).send('❌ Shareholder not found.');
+      return res.status(404).send(`
+        <h1>❌ Shareholder Not Found</h1>
+        <p>We couldn't find your shareholder record.</p>
+        <p>Please contact support with your ACNO: ${pending.acno}</p>
+      `);
     }
 
+    // Complete registration
     await RegisteredUser.create({
       name: shareholder.name,
       acno: shareholder.acno,
@@ -330,52 +440,87 @@ app.get('/api/confirm/:token', async (req, res) => {
       phone_number: shareholder.phone_number,
       registered_at: new Date(),
       holdings: shareholder.holdings,
-      chn:shareholder.chn
+      chn: shareholder.chn
     });
 
     await pending.destroy();
 
-
-    // Add this endpoint to your existing server code
-
-
-    // Send follow-up email
-    await transporter.sendMail({
-      from: '"E-Voting Portal" <your@email.com>',
+    // Send success notifications
+    const mailPromise = transporter.sendMail({
+      from: '"E-Voting Portal" <noreply@agm-registration.apel.com.ng>',
       to: shareholder.email,
-      subject: '✅ Successfully Registered for SAHCO AGM',
+      subject: '✅ Registration Complete - SAHCO AGM',
       html: `
         <h2>🎉 Hello ${shareholder.name},</h2>
-        <p>You have successfully registered for the upcoming SAHcO Annual General Meeting.</p>
-        <p>✅ Your account is now active.</p>
-        <h3>🗳️ Voting Instructions:</h3>
+        <p>Your registration for the SAHCO Annual General Meeting is complete.</p>
+        <p><strong>ACNO:</strong> ${shareholder.acno}</p>
+        <p><strong>Registered Email:</strong> ${shareholder.email}</p>
+        <h3>Next Steps:</h3>
         <ul>
-          <li>You will recieve a zoom link on you mail to join the Annual General meeting </a></li>
-          <li>Login to zoom using only your registered email address: <strong>${shareholder.email}</strong>
-   
+          <li>You will receive Zoom meeting details 24 hours before the AGM</li>
+          <li>Login using your registered email: <strong>${shareholder.email}</strong></li>
         </ul>
         <p>Thank you for participating!</p>
       `
     });
 
-
-      // Send success SMS if phone number exists
+    let smsSuccess = false;
     if (shareholder.phone_number) {
       try {
-        await twilioClient.messages.create({
-          body: `Hello ${shareholder.name}, your SAHCO AGM registration is successful. You will receive Zoom details via email.`,
-          from: TWILIO_PHONE_NUMBER,
-          to: shareholder.phone_number
-        });
+        const formattedPhone = formatNigerianPhone(shareholder.phone_number);
+        if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
+          await twilioClient.messages.create({
+            body: `Hello ${shareholder.name}, your SAHCO AGM registration (ACNO: ${shareholder.acno}) is complete. A Zoom meeting link will be sent to you before the AGM.`,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: formattedPhone
+          });
+          smsSuccess = true;
+        }
       } catch (smsError) {
-        console.error('Failed to send success SMS:', smsError);
+        console.error('Confirmation SMS failed:', smsError.message);
       }
     }
 
-    res.redirect('https://agm-registration.apel.com.ng//registration-success');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    await mailPromise; // Ensure email is sent before redirecting
+
+    // Custom success page with details
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Registration Successful</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 2rem; }
+          .success { color: #2ecc71; font-size: 2rem; }
+          .details { background: #f8f9fa; padding: 1rem; border-radius: 5px; max-width: 600px; margin: 1rem auto; }
+        </style>
+      </head>
+      <body>
+        <div class="success">✅ Registration Successful</div>
+        <div class="details">
+          <h2>Hello ${shareholder.name}</h2>
+          <p>Your registration for the SAHCO AGM is complete.</p>
+          <p><strong>ACNO:</strong> ${shareholder.acno}</p>
+          <p><strong>Email:</strong> ${shareholder.email}</p>
+          <p>${smsSuccess ? '📱 An SMS confirmation has been sent to your phone.' : ''}</p>
+          <p>You will receive meeting details via email before the event.</p>
+        </div>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Confirmation error:', {
+      error: error.message,
+      stack: error.stack,
+      token,
+      timestamp: new Date().toISOString()
+    });
+    res.status(500).send(`
+      <h1>⚠️ Server Error</h1>
+      <p>We encountered an error processing your registration.</p>
+      <p>Please try again later or contact support.</p>
+    `);
   }
 });
 // Get all registered users with pagination
