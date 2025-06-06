@@ -48,7 +48,7 @@ const PreRegistrationSuccess = () => {
         
         <motion.div className="confirmation-message" variants={itemVariants}>
           <p>Thank you for starting your registration process.</p>
-          <p><FaEnvelope /> Please check your email and click the confirmation link to complete your registration.</p>
+          <p><FaEnvelope /> Please check your email or Phone Number and click the confirmation link to complete your registration.</p>
           <p><FaClock /> The link will expire in 15 minutes.</p>
         </motion.div>
 

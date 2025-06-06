@@ -387,7 +387,7 @@ app.post('/api/send-confirmation', async (req, res) => {
 app.get('/api/confirm/:token', async (req, res) => {
   const { token } = req.params;
 
-  // Reusable phone functions
+  // Keep phone functions but don't send SMS
   const formatNigerianPhone = (phone) => {
     if (!phone) return null;
     try {
@@ -445,8 +445,8 @@ app.get('/api/confirm/:token', async (req, res) => {
 
     await pending.destroy();
 
-    // Send success notifications
-    const mailPromise = transporter.sendMail({
+    // Send success email
+    await transporter.sendMail({
       from: '"E-Voting Portal" <noreply@agm-registration.apel.com.ng>',
       to: shareholder.email,
       subject: '✅ Registration Complete - SAHCO AGM',
@@ -464,24 +464,17 @@ app.get('/api/confirm/:token', async (req, res) => {
       `
     });
 
-    let smsSuccess = false;
+    // Check if SMS would have been sent (but don't actually send)
+    let smsEligible = false;
     if (shareholder.phone_number) {
-      try {
-        const formattedPhone = formatNigerianPhone(shareholder.phone_number);
-        if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
-          await twilioClient.messages.create({
-            body: `Hello ${shareholder.name}, your SAHCO AGM registration (ACNO: ${shareholder.acno}) is complete. A Zoom meeting link will be sent to you before the AGM.`,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: formattedPhone
-          });
-          smsSuccess = true;
-        }
-      } catch (smsError) {
-        console.error('Confirmation SMS failed:', smsError.message);
+      const formattedPhone = formatNigerianPhone(shareholder.phone_number);
+      smsEligible = formattedPhone && isValidNigerianPhone(formattedPhone);
+      
+      // Log instead of sending
+      if (smsEligible) {
+        console.log(`[SMS Simulation] Would have sent to: ${formattedPhone}`);
       }
     }
-
-    await mailPromise; // Ensure email is sent before redirecting
 
     // Custom success page with details
     res.send(`
@@ -502,7 +495,7 @@ app.get('/api/confirm/:token', async (req, res) => {
           <p>Your registration for the SAHCO AGM is complete.</p>
           <p><strong>ACNO:</strong> ${shareholder.acno}</p>
           <p><strong>Email:</strong> ${shareholder.email}</p>
-          <p>${smsSuccess ? '📱 An SMS confirmation has been sent to your phone.' : ''}</p>
+          ${smsEligible ? `<p class="sms-notice">📱 SMS notifications are currently disabled</p>` : ''}
           <p>You will receive meeting details via email before the event.</p>
         </div>
       </body>
