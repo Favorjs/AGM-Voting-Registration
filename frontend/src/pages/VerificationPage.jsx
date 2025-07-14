@@ -31,7 +31,7 @@ const VerificationPage = () => {
     setMatches([]);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/verify-shareholder', formData);
+      const response = await axios.post('https://e-voting-backeknd-production-077c.up.railway.app/api/verify-shareholder', formData);
       
       if (response.data.exists) {
         if (response.data.exactMatch) {

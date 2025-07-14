@@ -54,7 +54,7 @@ const Success = ({ shareholderData, onBackToHome }) => {
         <motion.h2 variants={itemVariants}>Registration Successful! 🎉</motion.h2>
         
         <motion.div className="confirmation-message" variants={itemVariants}>
-          <p>Thank you for registering for the SAHCO AGM.</p>
+          <p>Thank you for registering for the INTERNATIONAL BREWERIES PLC AGM.</p>
           <p>A Success email has been sent to <strong>{shareholderData?.email}</strong>.</p>
         </motion.div>
 

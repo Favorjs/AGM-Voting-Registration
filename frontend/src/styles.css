@@ -106,7 +106,7 @@ body {
 }
 
 .mobile-menu-button:hover {
-  color: var(--secondary-color);
+  color: var(--light-color);
 }
 
 /* Main Content Styles */

@@ -27,8 +27,11 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
     setSelectedShareholder(null);
     setEditedEmail('');
 
+
+
+    
     try {
-      const response = await fetch('https://e-voting-backeknd-production.up.railway.app/api/check-shareholder', {
+      const response = await fetch(`https://e-voting-backeknd-production-077c.up.railway.app/api/check-shareholder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ searchTerm }),
@@ -79,7 +82,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
         phone_number: updatedShareholder.phone_number,
         chn: updatedShareholder.chn,
       });
-      const response = await fetch('https://e-voting-backeknd-production.up.railway.app/api/send-confirmation', {
+      const response = await fetch('https://e-voting-backeknd-production-077c.up.railway.app/api/send-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +165,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
               variants={containerVariants}
             >
               <motion.form onSubmit={handleSearch} variants={itemVariants}>
-                <motion.h2 variants={itemVariants}>SAHCO AGM REGISTRATION</motion.h2>
+                <motion.h2 variants={itemVariants}>INTERNATIONAL BREWERIES PLC AGM REGISTRATION</motion.h2>
                 <motion.p className="form-description" variants={itemVariants}>
                   Search by name, CHN or Registrars account number
                 </motion.p>

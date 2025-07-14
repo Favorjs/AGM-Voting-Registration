@@ -11,10 +11,10 @@ import {
   FaArrowRight
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import './RegisteredUsers.css'
+import './RegisteredHolders.css'
 import { utils, writeFile } from 'xlsx';
 
-const RegisteredUsers = () => {
+const RegisteredHolders = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -63,7 +63,7 @@ const exportToExcel = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://e-voting-backeknd-production.up.railway.app/api/registered-users?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`
+        `https://e-voting-backeknd-production-077c.up.railway.app/api/registered-users?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`
       );
       if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -273,4 +273,4 @@ const exportToExcel = () => {
   );
 };
 
-export default RegisteredUsers;
+export default RegisteredHolders;

@@ -45,7 +45,7 @@ const RegistrationPage = () => {
         password: formData.password
       };
       
-      const response = await axios.post('http://localhost:5000/api/register-shareholder', registrationData);
+      const response = await axios.post('https://e-voting-backeknd-production-077c.up.railway.app/api/register-shareholder', registrationData);
       
       if (response.data.success) {
         navigate('/success');
