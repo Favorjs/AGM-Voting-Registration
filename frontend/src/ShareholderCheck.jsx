@@ -249,8 +249,8 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
               variants={scaleUp}
             >
               <motion.h2 variants={itemVariants}>Verify Your Details</motion.h2>
-                <motion.p variants={itemVariants} style={{ color: 'red' }}>Please note that your email address displayed is exactly what we have on our record.</motion.p> 
-             <motion.p variants={itemVariants} style={{ color: 'red' }}>  You can fill in your email address if you do not have one on our record
+                <motion.p variants={itemVariants} style={{ color: 'red' }}>Please note that your email address and Phone Number displayed is exactly what we have on our record.</motion.p> 
+             <motion.p variants={itemVariants} style={{ color: 'red' }}>  You can fill in your email address or Phone Number  if you do not have one on our record
                 </motion.p>
 
               <motion.div 
@@ -271,7 +271,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
                   type="email"
                   value={editedEmail}
                   onChange={(e) => setEditedEmail(e.target.value)}
-                  placeholder="We do not have your email, Enter email "
+                  placeholder="Enter email Address"
                   required
                   className="email-input"
                 />
@@ -288,7 +288,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
         type="tel"
         value={editedPhone}
         onChange={(e) => setEditedPhone(e.target.value)}
-        placeholder="We do not have your phone, Enter phone"
+        placeholder="Enter phone Number"
         required
         className="phone-input"
       />
