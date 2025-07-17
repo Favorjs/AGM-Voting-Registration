@@ -40,7 +40,7 @@ const exportToExcel = () => {
     'CHN': user.chn || 'N/A',
     'Email': user.email || 'N/A', 
     'Phone': user.phone_number || 'N/A',
-    'Holdings': user.holdings,
+    'Holdings': user.shareholding,
     'Registered At': formatDate(user.registered_at)
   }));
 
@@ -208,7 +208,7 @@ const exportToExcel = () => {
                   </th>
                   <th onClick={() => handleSort('holdings')}>
                     <div className="th-content">
-                      Holdings {getSortIcon('holdings')}
+                      Holdings {getSortIcon('shareholding')}
                     </div>
                   </th>
                   <th onClick={() => handleSort('registered_at')}>
