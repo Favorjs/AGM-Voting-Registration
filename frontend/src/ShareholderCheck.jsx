@@ -17,6 +17,7 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
   const [results, setResults] = useState(null);
   const [selectedShareholder, setSelectedShareholder] = useState(null);
   const [editedEmail, setEditedEmail] = useState('');
+  const [editedPhone, setEditedPhone] = useState('');
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
@@ -26,6 +27,8 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
     setResults(null);
     setSelectedShareholder(null);
     setEditedEmail('');
+    setEditedPhone('');
+
 
 
 
@@ -42,11 +45,13 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
       if (data.status === 'account_match') {
         setSelectedShareholder(data.shareholder);
           setEditedEmail(data.shareholder.email || '');
+          setEditedPhone(data.shareholder.phone_number || '');
       } else if (data.status === 'name_matches') {
         setResults(data.shareholders);
       } else if (data.status === 'chn_match') {
         setSelectedShareholder(data.shareholder);
-        setEditedEmail(data.shareholder.email || ''); // Initialize edited email
+        setEditedEmail(data.shareholder.email || '');
+        setEditedPhone(data.shareholder.phone_number || ''); // Initialize edited email
       } else {
         setError(data.message || 'No matching shareholders found');
       }
@@ -62,12 +67,28 @@ const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
 
     setLoading(true);
     try {
-
+  // Validate at least one contact method is provided
+  if (!editedEmail && !editedPhone && !selectedShareholder.email && !selectedShareholder.phone_number) {
+    setError('Please provide either an email or phone number');
+    setLoading(false);
+    return;
+  }
+   
+        // Validate phone number format if provided
+        if (editedPhone) {
+          const phoneRegex = /^(\+234|0)[789]\d{9}$/;
+          if (!phoneRegex.test(editedPhone)) {
+            setError('Please enter a valid Nigerian phone number (start with 0 or +234)');
+            setLoading(false);
+            return;
+          }
+        }
 
   // Create updated shareholder data with the edited email
       const updatedShareholder = {
         ...selectedShareholder,
-        email: editedEmail || selectedShareholder.email
+        email: editedEmail || selectedShareholder.email,
+        phone_number: editedPhone || selectedShareholder.phone_number
       };
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -257,7 +278,22 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
               )}
             </motion.div>
             <br></br>
-                <motion.div variants={itemVariants}><FaPhone /> <b>Phone:</b>     {selectedShareholder.phone_number}</motion.div>
+            <motion.div variants={itemVariants} className="phone-input-container">
+    <FaPhone />
+    <b> Phone:</b>
+    {selectedShareholder.phone_number ? (
+      <span>{selectedShareholder.phone_number}</span>
+    ) : (
+      <input
+        type="tel"
+        value={editedPhone}
+        onChange={(e) => setEditedPhone(e.target.value)}
+        placeholder="We do not have your phone, Enter phone"
+        required
+        className="phone-input"
+      />
+    )}
+  </motion.div>
               </motion.div>
 
               <motion.div 

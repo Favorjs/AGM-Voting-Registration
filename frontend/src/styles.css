@@ -391,3 +391,26 @@ h2 {
   flex-grow: 1;
   max-width: 300px;
 }
+
+.phone-input-container,
+.email-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.phone-input,
+.email-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  flex-grow: 1;
+  max-width: 300px;
+}
+
+.phone-input:focus,
+.email-input:focus {
+  outline: none;
+  border-color: #1075bf;
+}
