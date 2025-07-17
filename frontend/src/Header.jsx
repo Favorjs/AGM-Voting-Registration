@@ -27,6 +27,7 @@ export default function Header() {
       <button 
         className="mobile-menu-button"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+         
       >
         {mobileMenuOpen ? <FaTimes /> : <FaBars />}
       </button>

@@ -292,13 +292,44 @@ tr:hover {
   
   .header {
     padding: 0.75rem 1rem;
+    /* position: fixed; */
+    z-index: 1000;
+  
+
+   
   }
   
   .mobile-menu-button {
     display: block;
+    z-index: 1000;
+    position: absolute;
+    margin-left: 6em; 
+
+    
+
+  }
+
+    .mobile-menu-button:hover {
+    color: #ddd;
+      transform: translateY(-2px);
+    
+    
+  }
+
+  .select-btn {
+    background-color: var(--success-color);
+    padding: 0.3rem 0.8rem;
+    font-size: 0.6rem;
   }
   
+  th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.8rem;
+  }
   .nav {
+    /* display: none; */
     position: fixed;
     top: 0;
     right: -100%;
@@ -310,10 +341,13 @@ tr:hover {
     padding: 5rem 1.5rem 2rem;
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
     transition: right 0.3s ease-out;
+    z-index: 1000;
   }
   
   .nav.mobile-menu-open {
     right: 0;
+   position:absolute;
+
   }
 
   .shareholder-details p {
@@ -413,4 +447,73 @@ h2 {
 .email-input:focus {
   outline: none;
   border-color: #1075bf;
+}
+
+.footer {
+  background-color: var(--primary-color); /* Dark base */
+  color: #ffffff;
+  padding: 0.6rem 0.5rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 50rem;
+}
+
+.footer-section {
+  flex: 1 1 200px;
+}
+
+.footer-section h4 {
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  color: var(--light-color) /* Accent color */
+}
+
+.footer-section p,
+.footer-section a {
+  margin: 0.4rem 0;
+  color: #ddd;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.3s ease;
+}
+
+.footer-section a:hover {
+  color: #ffffff;
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 1rem;
+  border-top: 1px solid #e6d8d8;
+  padding-top: 0.7rem;
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: row;
+    align-items: center;
+    text-align: center;
+    gap: 0rem;
+   
+  
+  }
+
+
+  .footer {
+    background-color: var(--primary-color); /* Dark base */
+    color: #ffffff;
+    padding: 0.6rem 0.5rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    align-self: baseline;
+  }
 }
