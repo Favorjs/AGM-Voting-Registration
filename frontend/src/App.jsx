@@ -28,9 +28,6 @@ function App() {
             {/* Shareholder flow */}
             <Route path="/shareholder" element={
               <ShareholderCheck 
-                setCurrentView={(view) => {
-                  // Handle navigation within shareholder flow if needed
-                }}
                 setShareholderData={setShareholderData}
               />
             } />
@@ -62,7 +59,7 @@ function App() {
               />
             } />
          
-         <Route path="/guest/success" element={<GuestSuccess />} />
+         <Route path="/guest/success" element={guestData ? (<GuestSuccess guestData={guestData} />) : (<Navigate to="/guest" />)} />
 
             {/* Admin/registered users */}
             <Route path="/registered-users" element={<RegisteredHolders />} />

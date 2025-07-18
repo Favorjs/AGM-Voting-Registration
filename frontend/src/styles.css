@@ -502,6 +502,7 @@ h2 {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+
   .footer-content {
     flex-direction: row;
     align-items: center;
@@ -519,6 +520,39 @@ h2 {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     align-self: baseline;
   }
+
+  /* User Type Selection Styles */
+.user-type-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+  padding: 1rem;
+}
+
+.user-type-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  max-width: 700px;
+  width: 100%;
+  text-align: center;
+}
+
+.user-type-card h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  font-size: 15px;
+  
+}
+
+.user-type-card p {
+  color: #777;
+  margin-bottom: 2rem;
+  font-size: 15px;
+}
+
 }
 
 /* User Type Selection Styles */

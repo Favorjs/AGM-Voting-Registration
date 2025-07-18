@@ -2,9 +2,9 @@ import { motion } from 'framer-motion';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-const GuestSuccess = () => {
-  const { state } = useLocation();
-  const guestData = state?.guestData;
+const GuestSuccess = ({ guestData: propGuestData }) => {
+    const { state } = useLocation();
+  const guestData = propGuestData || state?.guestData;
   const navigate = useNavigate();
 
   return (
@@ -23,7 +23,7 @@ const GuestSuccess = () => {
         
         <div className="confirmation-message">
           <p>Thank you for registering for the INTERNATIONAL BREWERIES PLC AGM.</p>
-          <p>A confirmation has been sent to <strong>{guestData?.email}</strong>.</p>
+          {/* <p>A confirmation has been sent to <strong>{guestData?.email}</strong>.</p> */}
           <p>You registered as: <strong>{guestData?.userType}</strong></p>
         </div>
 

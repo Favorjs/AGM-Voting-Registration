@@ -18,19 +18,19 @@ export default function Header() {
   return (
     <header className="header">
       <div className="logo-container">
-        <img src="./logo.png" alt="E-Voting Logo" className="logo" />
-        <img src="./imgs/intbrew.png" alt="Intbrew-Logo" className="logo" />
+        <img src="/logo.png" alt="E-Voting Logo" className="logo" />
+        <img src="/imgs/intbrew.png" alt="Intbrew-Logo" className="logo" />
         <h4></h4>
       </div>
       
       {/* Mobile menu button */}
-      <button 
+      {/* <button 
         className="mobile-menu-button"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
          
       >
         {mobileMenuOpen ? <FaTimes /> : <FaBars />}
-      </button>
+      </button> */}
       
       <nav className={`nav ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
         {/* <button 

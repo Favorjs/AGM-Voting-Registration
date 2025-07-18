@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { motion, AnimatePresence, color } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaSearch,
   FaUser,
@@ -11,6 +12,7 @@ import {
 } from 'react-icons/fa';
 
 const ShareholderCheck = ({ setShareholderData }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -117,7 +119,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
       const data = await response.json();
       if (response.ok) {
         setShareholderData(updatedShareholder);
-        setCurrentView('Presuccess');
+        navigate('/shareholder/presuccess');
       } else {
         setError(data.error || 'Registration failed or This shareholder is already registered');
       }

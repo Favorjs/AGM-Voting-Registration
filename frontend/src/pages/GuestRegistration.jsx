@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-const GuestRegistration = () => {
+const GuestRegistration = ({ setGuestData }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -58,7 +58,7 @@ const GuestRegistration = () => {
         // Update the guestData in parent component
         setGuestData(data.guest);
         // Then navigate to success page
-        navigate('/guest/success');
+        navigate('/guest/success', { state: { guestData: data.guest } });
 
       } 
     } catch (err) {
