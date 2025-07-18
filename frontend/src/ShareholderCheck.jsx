@@ -193,7 +193,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
                   Search by name, CHN or Registrars account number
                 </motion.p>
  <motion.p className="form-description" variants={itemVariants}  style={{ color: 'red' }} >
-                  Kindly note that you need to register and have a valid email to be able to attend the AGM
+                  Kindly note that you need to register and have a valid email or phone number to be able to attend the AGM
                 </motion.p>
                 <motion.div className="form-group" variants={itemVariants}>
                   <div className="input-with-icon">
