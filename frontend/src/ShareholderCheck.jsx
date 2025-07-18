@@ -10,7 +10,7 @@ import {
   FaEnvelopeOpen,
 } from 'react-icons/fa';
 
-const ShareholderCheck = ({ setCurrentView, setShareholderData }) => {
+const ShareholderCheck = ({ setShareholderData }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

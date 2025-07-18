@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ShareholderCheck from './ShareholderCheck';
 import PreSuccess from './pages/Presuccess';
-import Success from './pages/Success'
+import Success from './pages/Success';
 import RegisteredHolders from './pages/RegisteredHolders';
 import Header from './Header';
 import Footer from './Footer';
-import './pages/RegisteredHolders.css'; // Import the CSS
+import './pages/RegisteredHolders.css';
+import UserTypeSelection from './pages/UserTypeSelection';
+import GuestRegistration from './pages/GuestRegistration';
+import GuestSuccess from './pages/GuestSuccess';
 
 function App() {
-  const [currentView, setCurrentView] = useState('check');
   const [shareholderData, setShareholderData] = useState(null);
+  const [guestData, setGuestData] = useState(null);
 
   return (
     <Router>
@@ -19,28 +22,54 @@ function App() {
         
         <main className="main-content">
           <Routes>
-            <Route path="/" element={
-              currentView === 'check' ? (
-                <ShareholderCheck 
-                  setCurrentView={setCurrentView}
-                  setShareholderData={setShareholderData}
-                />
-              ) : currentView === 'Presuccess' ? (
+            {/* Landing page - User type selection */}
+            <Route path="/" element={<UserTypeSelection />} />
+            
+            {/* Shareholder flow */}
+            <Route path="/shareholder" element={
+              <ShareholderCheck 
+                setCurrentView={(view) => {
+                  // Handle navigation within shareholder flow if needed
+                }}
+                setShareholderData={setShareholderData}
+              />
+            } />
+            <Route path="/shareholder/presuccess" element={
+              shareholderData ? (
                 <PreSuccess 
                   shareholderData={shareholderData}
-                  onBackToHome={() => setCurrentView('check')}
+                  onBackToHome={() => <Navigate to="/shareholder" />}
                 />
               ) : (
-                <div className="error-view">
-                  <h2>❌ Registration Failed</h2>
-                  <p>Please try again or contact support.</p>
-                  <button onClick={() => setCurrentView('check')}>Try Again</button>
-                </div>
+                <Navigate to="/shareholder" />
               )
             } />
+            <Route path="/shareholder/success" element={
+              shareholderData ? (
+                <Success 
+                  shareholderData={shareholderData}
+                  onBackToHome={() => <Navigate to="/" />}
+                />
+              ) : (
+                <Navigate to="/shareholder" />
+              )
+            } />
+            
+            {/* Guest flow */}
+            <Route path="/guest" element={
+              <GuestRegistration 
+                setGuestData={setGuestData}
+              />
+            } />
+         
+         <Route path="/guest/success" element={<GuestSuccess />} />
+
+            {/* Admin/registered users */}
             <Route path="/registered-users" element={<RegisteredHolders />} />
             
-<Route path="/registration-success" element={<Success />} />
+            {/* Fallback routes */}
+            <Route path="/registration-success" element={<Navigate to="/shareholder/success" />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
 

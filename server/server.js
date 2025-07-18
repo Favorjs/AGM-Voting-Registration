@@ -276,6 +276,69 @@ const transporter = nodemailer.createTransport({
 });
 
 
+const GuestRegistration = sequelize.define('GuestRegistration', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true
+    }
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true,
+      notEmpty: true
+    }
+  },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true
+    }
+  },
+  userType: {
+    type: DataTypes.ENUM('guest', 'regulator', 'press', 'observer'),
+    allowNull: false,
+    field: 'user_type'
+  },
+
+  createdAt: {
+    type: DataTypes.DATE,
+    field: 'created_at'
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    field: 'updated_at'
+  },
+  deletedAt: {
+    type: DataTypes.DATE,
+    field: 'deleted_at'
+  }
+}, {
+  tableName: 'guest_registrations',
+  paranoid: true, // Enable soft deletes
+  timestamps: true,
+  freezeTableName: true,
+  // hooks: {
+  //   beforeCreate: (guest) => {
+  //     // Generate registration number (example: GR-2023-0001)
+  //     const year = new Date().getFullYear();
+  //     return GuestRegistration.max('id').then(maxId => {
+  //       const nextId = (maxId || 0) + 1;
+  //       guest.registrationNumber = `GR-${year}-${String(nextId).padStart(4, '0')}`;
+  //     });
+  //   }
+  // }
+});
 
 
 
@@ -772,6 +835,162 @@ app.get('/api/registered-users', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch registered users',
+      error: error.message
+    });
+  }
+});
+
+// app.get('/api/registered-users', async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const pageSize = parseInt(req.query.pageSize) || 10;
+//     const offset = (page - 1) * pageSize;
+//     let sortBy = req.query.sortBy || (req.query.userType === 'guests' ? 'createdAt' : 'registered_at');
+//     const sortOrder = req.query.sortOrder || 'DESC';
+//     const searchTerm = req.query.search || '';
+//     const userType = req.query.userType || 'shareholders';
+
+//     const model = userType === 'shareholders' ? RegisteredHolders : GuestRegistration;
+    
+//     // Map sortBy to correct column names
+//     if (userType === 'shareholders') {
+//       if (sortBy === 'createdAt') sortBy = 'registered_at';
+//       if (sortBy === 'phone') sortBy = 'phone_number';
+//     }
+
+//     const whereConditions = {};
+//     if (searchTerm) {
+//       whereConditions[Op.or] = userType === 'shareholders' 
+//         ? [
+//             { name: { [Op.iLike]: `%${searchTerm}%` } },
+//             { acno: { [Op.iLike]: `%${searchTerm}%` } },
+//             { email: { [Op.iLike]: `%${searchTerm}%` } },
+//             { phone_number: { [Op.iLike]: `%${searchTerm}%` } },
+//             { chn: { [Op.iLike]: `%${searchTerm}%` } }
+//           ]
+//         : [
+//             { name: { [Op.iLike]: `%${searchTerm}%` } },
+//             { email: { [Op.iLike]: `%${searchTerm}%` } },
+//             { phone: { [Op.iLike]: `%${searchTerm}%` } },
+//             { registrationNumber: { [Op.iLike]: `%${searchTerm}%` } },
+//             { userType: { [Op.iLike]: `%${searchTerm}%` } }
+//           ];
+//     }
+
+//     const totalCount = await model.count({ where: whereConditions });
+//     const results = await model.findAll({
+//       where: whereConditions,
+//       order: [[sortBy, sortOrder]],
+//       limit: pageSize,
+//       offset: offset,
+//       attributes: userType === 'shareholders'
+//         ? ['name', 'acno', 'email', 'phone_number', 'shareholding', 'chn', 'registered_at']
+//         : ['name', 'email', 'phone', 'userType', 'registrationNumber', 'createdAt']
+//     });
+
+//     res.json({
+//       success: true,
+//       data: results,
+//       pagination: {
+//         totalItems: totalCount,
+//         totalPages: Math.ceil(totalCount / pageSize),
+//         currentPage: page,
+//         pageSize: pageSize
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Database error',
+//       error: error.message
+//     });
+//   }
+// });
+
+
+app.post('/api/register-guest', (req, res) => {
+  const { name, email, phone, userType } = req.body;
+  
+  // Basic validation
+  if (!name || !email || !phone || !userType) {
+    return res.status(400).json({ success: false, error: 'All fields are required' });
+  }
+  
+  // Add to in-memory storage
+  const newGuest = {
+    name,
+    email,
+    phone,
+    userType,
+    registeredAt: new Date().toISOString()
+  };
+  
+  GuestRegistration.create(newGuest);
+  
+  res.status(201).json({
+    success: true,
+    guest: newGuest
+  });
+});
+app.get('/api/registered-guests', async (req, res) => {
+  try {
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * pageSize;
+
+    // Sorting parameters - use 'created_at' instead of 'createdAt'
+    const sortBy = req.query.sortBy || 'created_at'; // Changed to match your actual column name
+    const sortOrder = req.query.sortOrder || 'DESC';
+
+    // Search filter
+    const searchTerm = req.query.search || '';
+
+    // Build the query conditions
+    const whereConditions = {};
+    if (searchTerm) {
+      whereConditions[Op.or] = [
+        { name: { [Op.like]: `%${searchTerm}%` } },
+        { email: { [Op.like]: `%${searchTerm}%` } },
+        { phone: { [Op.like]: `%${searchTerm}%` } },
+        { userType: { [Op.like]: `%${searchTerm}%` } }
+      ];
+    }
+
+    // Get the total count for pagination info
+    const totalCount = await RegisteredGuests.count({ where: whereConditions });
+
+    // Get the paginated results
+    const guests = await RegisteredGuests.findAll({
+      where: whereConditions,
+      order: [[sortBy, sortOrder]],
+      limit: pageSize,
+      offset: offset,
+      attributes: ['name', 'email', 'phone', 'userType', 'created_at'] // Make sure this matches your column name
+    });
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    res.json({
+      success: true,
+      data: guests,
+      pagination: {
+        totalItems: totalCount,
+        totalPages,
+        currentPage: page,
+        pageSize,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching registered guests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch registered guests',
       error: error.message
     });
   }
