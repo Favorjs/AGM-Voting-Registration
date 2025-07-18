@@ -17,6 +17,7 @@
   padding: 0;
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  zoom: 0.98; /* Scales everything to 80% */
 }
 
 body {
@@ -24,6 +25,8 @@ body {
   color: var(--primary-color);
   line-height: 1.6;
   padding-top: 80px;
+ 
+
 }
 
 /* Header Styles */
