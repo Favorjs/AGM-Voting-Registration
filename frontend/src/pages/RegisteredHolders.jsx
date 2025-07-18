@@ -327,8 +327,8 @@ const RegisteredHolders = () => {
       { key: 'email', label: 'Email' },
       { key: 'phone', label: 'Phone' },
       { key: 'userType', label: 'User Type' },
-      { key: 'registrationNumber', label: 'Reg. Number' },
-      { key: 'createdAt', label: 'Registered At' }
+
+      { key: 'created_at', label: 'Registered At' }
     ]
   };
 
@@ -411,9 +411,9 @@ const handleSort = (key) => {
   }
   
   // Map frontend field names to backend field names
-  const backendKey = userType === 'shareholders' 
-    ? key === 'createdAt' ? 'registered_at' : key
-    : key;
+  const backendKey = userTypes === 'shareholders' 
+    ? (key === 'createdAt' ? 'registered_at' : key)
+    : (key === 'createdAt' ? 'created_at' : key);
   
   setSortConfig({ key: backendKey, direction });
 };
@@ -461,15 +461,11 @@ const handleSort = (key) => {
               onChange={(e) => {
                 setUserTypes(e.target.value);
                 setPagination({ ...pagination, page: 1 });
-                setSortConfig({ key: userTypes === 'shareholders' ? 'registered_at' : 'createdAt', direction: 'desc' });
+                setSortConfig({ key: e.target.value === 'shareholders' ? 'registered_at' : 'created_at', direction: 'desc' });
               }}
             >
-              <option value="shareholders">
-                <FaUser /> Shareholders
-              </option>
-              <option value="guests">
-                <FaUserTie /> Guests
-              </option>
+              <option value="shareholders">Shareholders</option>
+              <option value="guests">Guests</option>
             </select>
           </div>
           <button className="export-btn" onClick={() => window.print()}>
@@ -534,13 +530,13 @@ const handleSort = (key) => {
               </thead>
               <tbody>
                 {users.length > 0 ? (
-                  users.map((user) => (
-                    <tr key={userTypes === 'shareholders' ? `${user.acno}-${user.registered_at}` : user.id}>
+                  users.map((user, idx) => (
+                    <tr key={userTypes === 'shareholders' ? `${user.acno}-${user.registered_at}` : (user.id || user.registrationNumber || idx)}>
                       {columnConfig[userTypes].map(column => (
-                        <td key={`${user.id || user.acno}-${column.key}`}>
-                          {column.key === 'registered_at' || column.key === 'createdAt' 
-                            ? formatDate(user[column.key]) 
-                            : user[column.key] || 'N/A'}
+                        <td key={`${idx}-${column.key}`}>
+                          {(column.key === 'registered_at' || column.key === 'created_at')
+                            ? formatDate(user[column.key])
+                            : (user[column.key] || 'N/A')}
                         </td>
                       ))}
                     </tr>
@@ -579,12 +575,12 @@ const handleSort = (key) => {
           <div className="summary-info">
             Showing {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
             {Math.min(pagination.page * pagination.pageSize, pagination.totalItems)} of{' '}
-            {pagination.totalItems} registered {userType === 'shareholders' ? 'shareholders' : 'guests'}
+            {pagination.totalItems} registered {userTypes === 'shareholders' ? 'shareholders' : 'guests'}
           </div>
         </>
       )}
     </div>
   );
-};
+}
 
 export default RegisteredHolders;
