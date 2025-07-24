@@ -197,7 +197,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
                 </motion.p>
                 <motion.div className="form-group" variants={itemVariants}>
                   <div className="input-with-icon">
-                    <FaSearch className="input-icon" />
+                    <FaSearch className="" />
                     <input
                       type="text"
                       value={searchTerm}
