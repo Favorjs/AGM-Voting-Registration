@@ -45,7 +45,7 @@ const RegistrationPage = () => {
         password: formData.password
       };
       
-      const response = await axios.post('https://e-voting-backeknd-production-077c.up.railway.app/api/register-shareholder', registrationData);
+      const response = await axios.post('https://api.mbenefit.apel.com.ng/api/register-shareholder', registrationData);
       
       if (response.data.success) {
         navigate('/success');

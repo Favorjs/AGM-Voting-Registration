@@ -63,7 +63,7 @@
 //     try {
 //       setLoading(true);
 //       const response = await fetch(
-//         `https://e-voting-backeknd-production-077c.up.railway.app/api/registered-users?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`
+//         `https://api.mbenefit.apel.com.ng/api/registered-users?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`
 //       );
 //       if (!response.ok) {
 //         throw new Error('Failed to fetch users');
@@ -332,35 +332,67 @@ const RegisteredHolders = () => {
     ]
   };
 
-  const exportToExcel = () => {
-    const data = users.map(user => {
-      if (userTypes === 'shareholders') {
-        return {
-          'Name': user.name,
-          'Account No': user.acno,
-          'CHN': user.chn || 'N/A',
-          'Email': user.email || 'N/A',
-          'Phone': user.phone_number || 'N/A',
-          'Holdings': user.shareholding,
-          'Registered At': formatDate(user.registered_at)
-        };
-      } else {
-        return {
-          'Name': user.name,
-          'Email': user.email,
-          'Phone': user.phone,
-          'User Type': user.userType,
-          // 'Registration Number': user.registrationNumber,
-          'Registered At': formatDate(user.createdAt)
-        };
+  const exportToExcel = async () => {
+    try {
+      setLoading(true);
+      
+      // First, get the total number of items to fetch all at once
+      const endpoint = userTypes === 'shareholders' ? 'registered-users' : 'registered-guests';
+      const response = await fetch(
+        `https://api.mbenefit.apel.com.ng/api/${endpoint}?page=1&pageSize=${pagination.totalItems || 1000}&sortBy=registered_at&sortOrder=desc&search=${searchTerm}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const data = await response.json();
+      
+      if (!data?.data || !Array.isArray(data.data)) {
+        throw new Error('Invalid data format received from server');
       }
-    });
 
-    const worksheet = utils.json_to_sheet(data);
-    const workbook = utils.book_new();
-    utils.book_append_sheet(workbook, worksheet, `Registered ${userTypes === 'shareholders' ? 'Shareholders' : 'Guests'}`);
-    writeFile(workbook, `Registered_${userTypes === 'shareholders' ? 'Shareholders' : 'Guests'}.xlsx`, { compression: true });
+      const allUsers = data.data;
+      
+      const exportData = allUsers.map(user => {
+        if (userTypes === 'shareholders') {
+          return {
+            'Name': user.name,
+            'Account No': user.acno,
+            'CHN': user.chn || 'N/A',
+            'Email': user.email || 'N/A',
+            'Phone': user.phone_number || 'N/A',
+            'Holdings': user.shareholding,
+            'Registered At': formatDate(user.registered_at || user.createdAt)
+          };
+        } else {
+          return {
+            'Name': user.name,
+            'Email': user.email,
+            'Phone': user.phone || user.phone_number || 'N/A',
+            'User Type': user.userType || 'Guest',
+            'Registered At': formatDate(user.registered_at || user.createdAt)
+          };
+        }
+      });
+
+      const worksheet = utils.json_to_sheet(exportData);
+      const workbook = utils.book_new();
+      utils.book_append_sheet(workbook, worksheet, `Registered ${userTypes === 'shareholders' ? 'Shareholders' : 'Guests'}`);
+      writeFile(workbook, `Registered_${userTypes === 'shareholders' ? 'Shareholders' : 'Guests'}_${new Date().toISOString().split('T')[0]}.xlsx`, { compression: true });
+      
+    } catch (err) {
+      setError(`Failed to export data: ${err.message}`);
+      console.error('Export error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -369,7 +401,7 @@ const RegisteredHolders = () => {
         : 'registered-guests';
       
       const response = await fetch(
-        `https://e-voting-backeknd-production-077c.up.railway.app/api/${endpoint}?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`,
+        `https://api.mbenefit.apel.com.ng/api/${endpoint}?page=${pagination.page}&pageSize=${pagination.pageSize}&sortBy=${sortConfig.key}&sortOrder=${sortConfig.direction}&search=${searchTerm}`,
         {
           headers: {
             'Content-Type': 'application/json',
