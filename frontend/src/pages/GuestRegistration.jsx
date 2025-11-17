@@ -7,7 +7,7 @@ const GuestRegistration = ({ setGuestData }) => {
     name: '',
     email: '',
     phone: '',
-    userType: 'guest'
+    userType: 'observer'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +46,7 @@ const GuestRegistration = ({ setGuestData }) => {
     try {
       // Here you would typically send the data to your backend
       // For now, we'll just log it and navigate to a success page
-      const response = await fetch('https://api.mbenefit.apel.com.ng/api/register-guest', {
+      const response = await fetch('https://api.lasaco.apel.com.ng/api/register-guest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -127,9 +127,7 @@ const GuestRegistration = ({ setGuestData }) => {
             >
               <option value="guest">Guest</option>
               <option value="regulator">Regulator</option>
-              <option value="press">Press</option>
-              <option value="observer">Observer</option>
-              <option value="auditor">Auditor</option>
+              <option value="external-auditor"> External Auditor</option>
             </select>
           </div>
           

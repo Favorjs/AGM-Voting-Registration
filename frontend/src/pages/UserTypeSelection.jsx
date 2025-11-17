@@ -29,7 +29,7 @@ const UserTypeSelection = () => {
       transition={{ duration: 0.5 }}
     >
       <div className="user-type-card">
-        <h2>RED STAR EXPRESS PLC AGM REGISTRATION</h2>
+        <h2>EUNISELL INTERLINKED PLC AGM REGISTRATION</h2>
         <p>Please select your registration type:</p>
         
         {error && <p className="error-message">{error}</p>}
@@ -45,7 +45,7 @@ const UserTypeSelection = () => {
                 onChange={() => setUserType('shareholder')}
               />
               <span>Shareholder</span>
-              <p className="description">I own shares in RED STAR EXPRESS PLC</p>
+              <p className="description">I own shares in EUNISELL INTERLINKED PLC</p>
             </label>
             
             <label>
@@ -57,7 +57,7 @@ const UserTypeSelection = () => {
                 onChange={() => setUserType('guest')}
               />
               <span>Guest/Regulator/Observer</span>
-              <p className="description">I'm attending as a guest, regulator, or observer</p>
+              <p className="description">I'm attending as a Guest, Regulator, External Auditor </p>
             </label>
           </div>
           

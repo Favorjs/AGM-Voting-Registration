@@ -19,7 +19,7 @@ export default function Header() {
     <header className="header">
       <div className="logo-container">
         <img src="/logo.png" alt="E-Voting Logo" className="logo" />
-        <img src="/imgs/redstar.jpg" alt="Intbrew-Logo" className="logo" />
+        <img src="/imgs/eunisell.jpg" alt="eunisell-Logo" className="logo" />
         <h4></h4>
       </div>
       
@@ -39,7 +39,7 @@ export default function Header() {
         >
           <FaBook className="icon" /> E-Voting Manual
         </button> */}
-        <a href="mailto:registrars@apel.com.ng" className="nav-link">
+        <a href="mailto:registrars@apel.ng" className="nav-link">
           <FaHeadset className="icon" /> Contact Support
         </a>
       </nav>

@@ -58,7 +58,7 @@ const PreRegistrationSuccess = () => {
         </div>
 
   <motion.div variants={itemVariants}>
-          <Link to="https://agm-registration.apel.com.ng/" className="back-home-btn">
+          <Link to="https://lasaco.apel.com.ng/" className="back-home-btn">
             Back to Home
           </Link>
         </motion.div>

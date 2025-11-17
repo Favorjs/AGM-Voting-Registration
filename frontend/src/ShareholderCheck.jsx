@@ -36,7 +36,8 @@ const ShareholderCheck = ({ setShareholderData }) => {
 
     
     try {
-      const response = await fetch(`https://api.mbenefit.apel.com.ng/api/check-shareholder`, {
+      // const API_URL= process.env.REACT_APP_API_URL
+      const response = await fetch(`https://api.lasaco.apel.com.ng/api/check-shareholder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ searchTerm }),
@@ -105,7 +106,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
         phone_number: updatedShareholder.phone_number,
         chn: updatedShareholder.chn,
       });
-      const response = await fetch('https://api.mbenefit.apel.com.ng/api/send-confirmation', {
+      const response = await fetch('https://api.eunisell.apel.com.ng/api/send-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -188,7 +189,7 @@ if (editedEmail && !emailRegex.test(editedEmail)) {
               variants={containerVariants}
             >
               <motion.form onSubmit={handleSearch} variants={itemVariants}>
-                <motion.h2 variants={itemVariants}>RED STAR EXPRESS PLC AGM REGISTRATION</motion.h2>
+                <motion.h2 variants={itemVariants}>EUNISELL INTERLINKED PLC AGM REGISTRATION</motion.h2>
                 <motion.p className="form-description" variants={itemVariants}>
                   Search by name, CHN or Registrars account number
                 </motion.p>

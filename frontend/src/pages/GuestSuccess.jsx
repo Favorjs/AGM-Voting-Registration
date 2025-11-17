@@ -22,7 +22,7 @@ const GuestSuccess = ({ guestData: propGuestData }) => {
         <h2>Registration Successful! 🎉</h2>
         
         <div className="confirmation-message">
-          <p>Thank you for registering for the RED STAR EXPRESS PLC AGM.</p>
+          <p>Thank you for registering for the EUNISELL INTERLINKED PLC AGM.</p>
           {/* <p>A confirmation has been sent to <strong>{guestData?.email}</strong>.</p> */}
           <p>You registered as: <strong>{guestData?.userType}</strong></p>
         </div>

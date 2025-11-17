@@ -9,6 +9,7 @@ const app = express();
 const TWILIO_ACCOUNT_SID= process.env.TWILIO_ACCOUNT_SID
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_ACCOUNT_TOKEN
 const TWILIO_PHONE_NUMBER =process.env.TWILIO_PHONE_NUMBER
+const fetch = require('node-fetch');
 
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
@@ -188,8 +189,10 @@ const Shareholder = sequelize.define('Shareholder', {
   createdAt: 'created_at',
   updatedAt: false,
   freezeTableName: true
-});
+}
 
+)
+;
 
 // Registered User Model
 const RegisteredUser = sequelize.define('registeredusers', {
@@ -228,7 +231,7 @@ const RegisteredUser = sequelize.define('registeredusers', {
   phone_number: {
     type: DataTypes.STRING,
     allowNull: true,
-    unique: true,
+    unique: false,
   
   },
   shareholding: {
@@ -329,6 +332,7 @@ async function migrateExistingHolders() {
 
 
 
+
 // Verification Token Model
 const VerificationToken = sequelize.define('VerificationToken', {
   acno: { type: DataTypes.STRING, allowNull: false },
@@ -341,18 +345,147 @@ const VerificationToken = sequelize.define('VerificationToken', {
   timestamps: false,
   freezeTableName: true
 });
-sequelize.sync()
+
 // Nodemailer setup
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+// Railway SMTP configuration
+// const transporter = nodemailer.createTransport({
+//   host: process.env.SMTP_HOST || 'smtp.gmail.com',
+//   port: process.env.SMTP_PORT || 587,
+//   secure: false,
+//   auth: {
+//     user: process.env.SMTP_USER || process.env.EMAIL_USER,
+//     pass: process.env.SMTP_PASSWORD || process.env.EMAIL_PASS
+//   },
+//   tls: {
+//     rejectUnauthorized: false // optional, helps with self-signed certs
+//   },
+//   connectionTimeout: 10000,
+//   greetingTimeout: 10000,
+//   socketTimeout: 15000
+// });
+// const testEmailConnection = async () => {
+//   try {
+//     console.log('🔄 Testing email connection...');
+//     await transporter.verify();
+//     console.log('✅ Email server connection established');
+//   } catch (error) {
+//     console.error('❌ Email connection failed:', error.message);
+//     console.log('💡 Email functionality will be disabled');
+//   }
+// };
+
+// testEmailConnection();
+
+
+
+
+
+// Zoho Mail API Configuration
+class ZohoMailService {
+  constructor() {
+    this.clientId = process.env.ZOHO_CLIENT_ID;
+    this.clientSecret = process.env.ZOHO_CLIENT_SECRET;
+    this.refreshToken = process.env.ZOHO_REFRESH_TOKEN;
+    this.fromEmail = process.env.ZOHO_FROM_EMAIL;
+    this.fromName = 'EUNISELL INTERLINKED AGM';
+    this.accessToken = null;
   }
-});
 
+  // Get access token using refresh token
+  async getAccessToken() {
+    try {
+      const response = await fetch('https://accounts.zoho.com/oauth/v2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+          refresh_token: this.refreshToken
+        })
+      });
 
-const GuestRegistration = sequelize.define('GuestRegistration', {
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(`Zoho API Error: ${data.error} - ${data.error_description}`);
+      }
+
+      this.accessToken = data.access_token;
+      console.log('✅ Zoho access token obtained');
+      return this.accessToken;
+    } catch (error) {
+      console.error('❌ Zoho token refresh failed:', error.message);
+      throw error;
+    }
+  }
+
+  // Send email via Zoho API
+  async sendEmail(to, subject, html) {
+    try {
+      if (!this.accessToken) {
+        await this.getAccessToken();
+      }
+
+      const emailData = {
+        fromAddress: this.fromEmail,
+        toAddress: to,
+        subject: subject,
+        content: html,
+        mailFormat: 'html'
+      };
+
+      const response = await fetch('https://mail.zoho.com/api/accounts/79419000000008002/messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Zoho-oauthtoken ${this.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // If token expired, refresh and retry once
+        if (response.status === 401) {
+          console.log('🔄 Token expired, refreshing...');
+          await this.getAccessToken();
+          return await this.sendEmail(to, subject, html);
+        }
+        throw new Error(`Zoho API Error: ${result.message || response.statusText}`);
+      }
+
+      console.log(`✅ Email sent via Zoho API to ${to}`);
+      return { success: true, messageId: result.data?.messageId };
+    } catch (error) {
+      console.error('❌ Zoho API email failed:', error.message);
+      throw error;
+    }
+  }
+
+  // Test connection
+  async testConnection() {
+    try {
+      await this.getAccessToken();
+      console.log('✅ Zoho Mail API connection established');
+      return true;
+    } catch (error) {
+      console.error('❌ Zoho Mail API connection failed');
+      return false;
+    }
+  }
+}
+
+// Initialize Zoho Mail Service
+const zohoMail = new ZohoMailService();
+
+// Test connection on startup
+zohoMail.testConnection();
+
+const GuestRegistration = sequelize.define('guest_registrations', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -382,7 +515,7 @@ const GuestRegistration = sequelize.define('GuestRegistration', {
     }
   },
   userType: {
-    type: DataTypes.ENUM('guest', 'regulator', 'press', 'observer', 'auditor'),
+    type: DataTypes.ENUM('guest', 'regulator', 'external-auditor'),
     allowNull: false,
     field: 'user_type'
   },
@@ -405,7 +538,9 @@ const GuestRegistration = sequelize.define('GuestRegistration', {
   timestamps: true,
   freezeTableName: true,
   // hooks: {
-});
+}
+
+);
 
 // Alias for backward compatibility with older route logic
 const RegisteredGuests = GuestRegistration;
@@ -423,7 +558,7 @@ const RegisteredGuests = GuestRegistration;
   //   }
   // }
 
-
+  // sequelize.sync({force:true})
 app.post('/api/check-shareholder', async (req, res) => {
   const { searchTerm } = req.body;
 
@@ -435,7 +570,7 @@ app.post('/api/check-shareholder', async (req, res) => {
 
   try {
     // Check for exact account number match first
-    if (/^\d+$/.test(cleanTerm)) {
+    if (/^\d+$/.test(cleanTerm)) {send 
       const shareholder = await Shareholder.findOne({ 
         where: { acno: cleanTerm } 
       });
@@ -549,6 +684,179 @@ function formatShareholder(shareholder) {
   };
 }
 // Send confirmation link via email
+// app.post('/api/send-confirmation', async (req, res) => {
+//   const { acno, email, phone_number } = req.body;
+
+//   // Phone number formatting and validation functions
+//   const formatNigerianPhone = (phone) => {
+//     if (!phone) return null;
+//     try {
+//       const phoneString = String(phone).trim();
+//       let cleaned = phoneString.replace(/\D/g, '');
+      
+//       if (cleaned.startsWith('0')) {
+//         return `+234${cleaned.substring(1)}`;
+//       }
+//       if (cleaned.startsWith('234') && cleaned.length === 13) {
+//         return `+${cleaned}`;
+//       }
+//       return phoneString;
+//     } catch (error) {
+//       console.error('Phone formatting error:', error);
+//       return null;
+//     }
+//   };
+
+//   const isValidNigerianPhone = (phone) => {
+//     return phone && /^\+234[789]\d{9}$/.test(String(phone).trim());
+//   };
+
+//   try {
+//     // Check if already registered
+//     const alreadyRegistered = await RegisteredHolders.findOne({ where: { acno } });
+//     if (alreadyRegistered) {
+//       return res.status(400).json({ 
+//         message: '❌ This shareholder is already registered',
+//         details: { acno }
+//       });
+//     }
+
+//     // Find shareholder
+//     const shareholder = await Shareholder.findOne({ where: { acno } });
+//     if (!shareholder) {
+//       return res.status(404).json({ 
+//         message: 'Shareholder not found',
+//         details: { acno }
+//       });
+//     }
+// 1
+//     // Update email if provided and different
+//     if (email && email !== shareholder.email) {
+//       await Shareholder.update({ email }, { where: { acno } });
+//       shareholder.email = email;
+//     }
+
+
+
+//  // Update phone number if provided and different
+//  if (phone_number && phone_number !== shareholder.phone_number) {
+//   const formattedPhone = formatNigerianPhone(phone_number);
+//   if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
+//     await Shareholder.update({ phone_number: formattedPhone }, { where: { acno } });
+//     shareholder.phone_number = formattedPhone;
+//   } else {
+//     return res.status(400).json({
+//       message: '❌ Invalid phone number format',
+//       details: { phone_number }
+//     });
+//   }
+// }
+
+//  // Update phone number if provided
+//  let finalPhoneNumber = shareholder.phone_number;
+//  if (phone_number) {
+//    const formattedPhone = formatNigerianPhone(phone_number);
+//    if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
+//      await Shareholder.update({ phone_number: formattedPhone }, { where: { acno } });
+//      finalPhoneNumber = formattedPhone;
+//    } else {
+//      return res.status(400).json({
+//        message: '❌ Invalid phone number format',
+//        details: { phone_number }
+//      });
+//    }
+//  }
+
+//  // Ensure we have at least one contact method
+//  if (!shareholder.email && !email && !finalPhoneNumber) {
+//    return res.status(400).json({
+//      message: '❌ Either email or phone number is required',
+//      details: { acno }
+//    });
+//  }
+
+    
+//     // Generate verification token
+//     const token = uuidv4();
+//     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
+
+//     await VerificationToken.create({ 
+//       acno, 
+//       token, 
+//       email: email || shareholder.email, 
+//       phone_number: finalPhoneNumber,
+//       expires_at: expiresAt 
+//     });
+
+
+//     const confirmUrl =  `https://api.lasaco.apel.com.ng/api/confirm/${token}`;
+
+//     // Send confirmation email
+//     await transporter.sendMail({
+//       from: 'E-Registration <noreply@agm-registration.apel.com.ng>',
+//       to: shareholder.email,
+//       subject: 'Confirm Your Registration',
+//       html: `
+//         <h2>🗳️ E-Voting Registration</h2>
+//         <p>Hello ${shareholder.name},</p>
+//         <p>Click the button below to confirm your registration:</p>
+//         <a href="${confirmUrl}" style="background-color:#1075bf;padding:12px 20px;color:#fff;text-decoration:none;border-radius:5px;">
+//           ✅ Confirm Registration
+//         </a>
+//         <p>If you didn't request this, please ignore this email.</p>
+//         <p><small>Token expires at: ${expiresAt.toLocaleString()}</small></p>
+//       `
+//     });
+
+//     // Send SMS if phone number exists
+//     if (shareholder.phone_number) {
+//       try {
+//         const formattedPhone = formatNigerianPhone(shareholder.phone_number);
+        
+//         if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
+//           await twilioClient.messages.create({
+//             body: `Hello ${shareholder.name}, confirm EUNISELL INTERLINKED PLC AGM REGISTRATION: ${confirmUrl}`,
+//             from: process.env.TWILIO_PHONE_NUMBER,
+//             to: formattedPhone
+//           });
+//           console.log(`SMS sent to ${formattedPhone}`);
+//         } else {
+//           console.warn('Invalid phone number format:', shareholder.phone_number);
+//         }
+//       } catch (smsError) {
+//         console.error('SMS sending failed:', {
+//           error: smsError.message,
+//           phone: shareholder.phone_number,
+//           timestamp: new Date().toISOString()
+//         });
+//       }
+//     }
+
+//     res.json({ 
+//       success: true,
+//       message: '✅ Confirmation sent to your email',
+//       details: {
+//         email: shareholder.email,
+//         phone_number: shareholder.phone_number ? 'SMS sent' : 'No phone number'
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error('Send confirmation error:', {
+//       error: error.message,
+//       stack: error.stack,
+//       timestamp: new Date().toISOString(),
+//       requestBody: req.body
+//     });
+//     res.status(500).json({ 
+//       success: false,
+//       error: 'Failed to send confirmation',
+//       details: error.message 
+//     });
+//   }
+// });
+
+// Send confirmation link via email with better error handling
 app.post('/api/send-confirmation', async (req, res) => {
   const { acno, email, phone_number } = req.body;
 
@@ -594,52 +902,35 @@ app.post('/api/send-confirmation', async (req, res) => {
         details: { acno }
       });
     }
-1
+
     // Update email if provided and different
     if (email && email !== shareholder.email) {
       await Shareholder.update({ email }, { where: { acno } });
       shareholder.email = email;
     }
 
+    // Update phone number if provided
+    let finalPhoneNumber = shareholder.phone_number;
+    if (phone_number) {
+      const formattedPhone = formatNigerianPhone(phone_number);
+      if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
+        await Shareholder.update({ phone_number: formattedPhone }, { where: { acno } });
+        finalPhoneNumber = formattedPhone;
+      } else {
+        return res.status(400).json({
+          message: '❌ Invalid phone number format',
+          details: { phone_number }
+        });
+      }
+    }
 
-
- // Update phone number if provided and different
- if (phone_number && phone_number !== shareholder.phone_number) {
-  const formattedPhone = formatNigerianPhone(phone_number);
-  if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
-    await Shareholder.update({ phone_number: formattedPhone }, { where: { acno } });
-    shareholder.phone_number = formattedPhone;
-  } else {
-    return res.status(400).json({
-      message: '❌ Invalid phone number format',
-      details: { phone_number }
-    });
-  }
-}
-
- // Update phone number if provided
- let finalPhoneNumber = shareholder.phone_number;
- if (phone_number) {
-   const formattedPhone = formatNigerianPhone(phone_number);
-   if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
-     await Shareholder.update({ phone_number: formattedPhone }, { where: { acno } });
-     finalPhoneNumber = formattedPhone;
-   } else {
-     return res.status(400).json({
-       message: '❌ Invalid phone number format',
-       details: { phone_number }
-     });
-   }
- }
-
- // Ensure we have at least one contact method
- if (!shareholder.email && !email && !finalPhoneNumber) {
-   return res.status(400).json({
-     message: '❌ Either email or phone number is required',
-     details: { acno }
-   });
- }
-
+    // Ensure we have at least one contact method
+    if (!shareholder.email && !email && !finalPhoneNumber) {
+      return res.status(400).json({
+        message: '❌ Either email or phone number is required',
+        details: { acno }
+      });
+    }
     
     // Generate verification token
     const token = uuidv4();
@@ -653,58 +944,116 @@ app.post('/api/send-confirmation', async (req, res) => {
       expires_at: expiresAt 
     });
 
+    const confirmUrl = `https://api.eunisell.apel.com.ng/api/confirm/${token}`;
 
-    const confirmUrl = `https://api.mbenefit.apel.com.ng/api/confirm/${token}`;
+    // Email sending with better error handling
+    let emailSent = false;
+    let smsSent = false;
 
-    // Send confirmation email
-    await transporter.sendMail({
-      from: 'E-Registration <noreply@agm-registration.apel.com.ng>',
-      to: shareholder.email,
-      subject: 'Confirm Your Registration',
-      html: `
-        <h2>🗳️ E-Voting Registration</h2>
-        <p>Hello ${shareholder.name},</p>
-        <p>Click the button below to confirm your registration:</p>
-        <a href="${confirmUrl}" style="background-color:#1075bf;padding:12px 20px;color:#fff;text-decoration:none;border-radius:5px;">
-          ✅ Confirm Registration
-        </a>
-        <p>If you didn't request this, please ignore this email.</p>
-        <p><small>Token expires at: ${expiresAt.toLocaleString()}</small></p>
-      `
-    });
+    try {
+      // Send confirmation email with timeout
+      const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+       
+          <h1 style="color: black; margin: 0;"> EUNISELL INTERLINKED PLC</h1>
+          <p style="color: black; margin: 5px 0 0 0;">Annual General Meeting Registration</p>
+  
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #333;">Hello ${shareholder.name},</h2>
+          <p>Thank you for registering for the EUNISELL INTERLINKED PLC Annual General Meeting.</p>
+          <p>Please click the button below to confirm your registration:</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${confirmUrl}" 
+               style="background-color: #1075bf; color: white; padding: 15px 30px; 
+                      text-decoration: none; border-radius: 5px; font-size: 16px; 
+                      font-weight: bold; display: inline-block;">
+              ✅ Confirm Registration
+            </a>
+          </div>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Account Number:</strong> ${shareholder.acno}</p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${shareholder.email}</p>
+            <p style="margin: 5px 0;"><strong>Expires:</strong> ${expiresAt.toLocaleString()}</p>
+          </div>
+          
+          <p style="color: #666; font-size: 14px;">
+            If you did not request this registration, please ignore this email.
+          </p>
+        </div>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0; color: #666; font-size: 12px;">
+            EUNISELL INTERLINKED PLC © ${new Date().getFullYear()}
+          </p>
+        </div>
+      </div>
+    `;
+
+      // Add timeout to email sending
+      const emailTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Email timeout')), 10000);
+      });
+
+      await Promise.race([zohoMail.sendEmail(shareholder.email, 'Confirm Your Registration - EUNISELL INTERLINKED PLC AGM', emailHtml), emailTimeout]);
+      emailSent = true;
+      console.log(`✅ Email sent to ${shareholder.email}`);
+
+    } catch (emailError) {
+      console.error('❌ Email sending failed:', {
+        error: emailError.message,
+        email: shareholder.email,
+        timestamp: new Date().toISOString()
+      });
+      // Continue even if email fails - we'll try SMS
+    }
 
     // Send SMS if phone number exists
-    if (shareholder.phone_number) {
+    if (finalPhoneNumber) {
       try {
-        const formattedPhone = formatNigerianPhone(shareholder.phone_number);
+        const formattedPhone = formatNigerianPhone(finalPhoneNumber);
         
         if (formattedPhone && isValidNigerianPhone(formattedPhone)) {
           await twilioClient.messages.create({
-            body: `Hello ${shareholder.name}, confirm RED STAR EXPRESS PLC AGM registration: ${confirmUrl}`,
+            body: `Hello ${shareholder.name}, confirm EUNISELL INTERLINKED PLC AGM REGISTRATION: ${confirmUrl}`,
             from: process.env.TWILIO_PHONE_NUMBER,
             to: formattedPhone
           });
-          console.log(`SMS sent to ${formattedPhone}`);
+          smsSent = true;
+          console.log(`✅ SMS sent to ${formattedPhone}`);
         } else {
-          console.warn('Invalid phone number format:', shareholder.phone_number);
+          console.warn('Invalid phone number format:', finalPhoneNumber);
         }
       } catch (smsError) {
         console.error('SMS sending failed:', {
           error: smsError.message,
-          phone: shareholder.phone_number,
+          phone: finalPhoneNumber,
           timestamp: new Date().toISOString()
         });
       }
     }
 
-    res.json({ 
-      success: true,
-      message: '✅ Confirmation sent to your email',
-      details: {
-        email: shareholder.email,
-        phone_number: shareholder.phone_number ? 'SMS sent' : 'No phone number'
-      }
-    });
+    // Return appropriate response based on what was sent
+    if (emailSent || smsSent) {
+      res.json({ 
+        success: true,
+        message: '✅ Confirmation sent successfully',
+        details: {
+          email: emailSent ? 'Sent' : 'Failed',
+          sms: smsSent ? 'Sent' : finalPhoneNumber ? 'Failed' : 'No phone number'
+        }
+      });
+    } else {
+      res.status(500).json({ 
+        success: false,
+        message: '❌ Failed to send confirmation via both email and SMS',
+        details: {
+          email: 'Failed',
+          sms: finalPhoneNumber ? 'Failed' : 'No phone number'
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Send confirmation error:', {
@@ -713,13 +1062,15 @@ app.post('/api/send-confirmation', async (req, res) => {
       timestamp: new Date().toISOString(),
       requestBody: req.body
     });
+    
     res.status(500).json({ 
       success: false,
-      error: 'Failed to send confirmation',
-      details: error.message 
+      error: 'Failed to process registration request',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Please try again later'
     });
   }
 });
+
 
 // Confirm registration
 app.get('/api/confirm/:token', async (req, res) => {
@@ -780,7 +1131,7 @@ app.get('/api/confirm/:token', async (req, res) => {
       shareholding: shareholder.holdings,
       chn: shareholder.chn,
       rin: shareholder.rin,
-      address: shareholder.address
+      // address: shareholder.address
     });
 
     
@@ -788,23 +1139,49 @@ app.get('/api/confirm/:token', async (req, res) => {
     await pending.destroy();
 
     // Send success email
-    await transporter.sendMail({
-      from: '"E-Voting Portal" <noreply@agm-registration.apel.com.ng>',
-      to: shareholder.email,
-      subject: '✅ Registration Complete - RED STAR EXPRESS PLC AGM',
-      html: `
-        <h2>🎉 Hello ${shareholder.name},</h2>
-        <p>Your registration for the RED STAR EXPRESS PLC Annual General Meeting is complete.</p>
-        <p><strong>ACNO:</strong> ${shareholder.acno}</p>
-        <p><strong>Registered Email:</strong> ${shareholder.email}</p>
-        <h3>Next Steps:</h3>
-        <ul>
-          <li>You will receive Zoom meeting details 24 hours before the AGM</li>
-          <li>Login using your registered email: <strong>${shareholder.email}</strong></li>
-        </ul>
-        <p>Thank you for participating!</p>
-      `
-    });
+    const zoomLink = `https://us06web.zoom.us/j/85474039315`;
+await zohoMail.sendEmail(
+  shareholder.email,
+  '✅ Registration Complete - EUNISELL INTERLINKED PLC AGM',
+  `
+  <body style="font-family: Arial, sans-serif; background-color: #f6f9fc; padding: 20px; color: #333;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+      
+      <h2 style="color:#1075bf; text-align: center;">🎉 Hello ${shareholder.name},</h2>
+      
+      <p style="font-size: 15px; line-height: 1.6;">
+        Your registration for the <strong>EUNISELL INTERLINKED PLC Annual General Meeting</strong> is now complete.
+      </p>
+
+      <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>📌 ACNO:</strong> ${shareholder.acno}</p>
+        <p><strong>📧 Registered Email:</strong> ${shareholder.email}</p>
+      </div>
+
+      <h3 style="color:#1075bf;">Next Steps:</h3>
+      <p style="font-size: 15px;">Kindly use the link below to join the upcoming meeting:</p>
+
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="${zoomLink}" style="background-color:#1075bf; padding:12px 25px; color:#fff; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block;">
+          ✅ Join Zoom Meeting
+        </a>
+      </div>
+
+      <p style="font-size: 14px; line-height: 1.6;">
+        Please login using your registered email: 
+        <strong>${shareholder.email}</strong>
+      </p>
+
+      <p style="margin-top: 30px; font-size: 14px; text-align: center; color: #666;">
+        Thank you for participating! <br>
+        <em>— EUNISELL INTERLINKED PLC Team</em>
+      </p>
+    </div>
+  </body>
+  `
+);
+
+    
 
     // Check if SMS would have been sent (but don't actually send)
     let smsEligible = false;
@@ -834,7 +1211,7 @@ app.get('/api/confirm/:token', async (req, res) => {
         <div class="success">✅ Registration Successful</div>
         <div class="details">
           <h2>Hello ${shareholder.name}</h2>
-          <p>Your registration for the RED STAR EXPRESS PLC AGM is complete.</p>
+          <p>Your registration for the EUNISELL INTERLINKED PLC AGM is complete.</p>
           <p><strong>ACNO:</strong> ${shareholder.acno}</p>
           <p><strong>Email:</strong> ${shareholder.email}</p>
           ${smsEligible ? `<p class="sms-notice">📱 SMS notifications are currently disabled</p>` : ''}
@@ -922,6 +1299,9 @@ app.get('/api/registered-users', async (req, res) => {
     });
   }
 });
+
+
+
 
 // app.get('/api/registered-users', async (req, res) => {
 //   try {
