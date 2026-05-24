@@ -1145,6 +1145,16 @@ app.get('/api/registered-guests', async (req, res) => {
   }
 });
 
+// ── Multi-tenant platform routes ──────────────────────────────────────────
+const initModels    = require('./models');
+const adminRoutes   = require('./adminRoutes');
+const companyRoutes = require('./companyRoutes');
+
+const platformModels = initModels(sequelize);
+
+app.use('/api/admin',   adminRoutes(platformModels, mailgunService));
+app.use('/api/company', companyRoutes(platformModels, mailgunService, twilioClient));
+
 // Start server
 const PORT = process.env.PORT;
 sequelize.sync().then(() => {
